@@ -1,0 +1,33 @@
+{
+    "name": "project",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.ts",
+    "scripts": {
+        "dev": "npx ts-node src/index.ts",
+        "start": "node dist/index.js",
+        "build": "npx tsc -p ."
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/node": "^20.4.8",
+        "@typescript-eslint/eslint-plugin": "^6.3.0",
+        "@typescript-eslint/parser": "^6.3.0",
+        "eslint": "^8.46.0",
+        "eslint-config-google": "^0.14.0",
+        "eslint-config-prettier": "^9.0.0",
+        "eslint-import-resolver-typescript": "^3.5.5",
+        "eslint-plugin-import": "^2.28.0",
+        "eslint-plugin-prettier": "^5.0.0",
+        "prettier": "^3.0.1",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.1.6"
+    },
+    "dependencies": {
+        "canvas": "^2.11.2",
+        "dotenv": "^16.3.1",
+        "it8951": "^0.1.1",
+        "sharp": "^0.32.4"
+    }
+}
