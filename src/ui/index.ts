@@ -15,17 +15,17 @@ const config = {
     outsidePadding: 30,
     fillStyle: '#ffffffdd',
     strokeStyle: '#000000dd',
-    backgroundSrc: 'files/wallpapers/wp5-dither.png',
+    backgroundSrc: 'files/wallpapers/wp5.png',
     modules: [
-        { drawCanvas: new Status(), x: 0, y: 0, width: 2, height: 1 },
-        { drawCanvas: new Temperature(3 * 60), x: 1, y: 1, width: 1, height: 1 },
-        { drawCanvas: new CO2Module(3 * 60), x: 1, y: 2, width: 1, height: 1 },
-        { drawCanvas: new Weather(), x: 0, y: 1, width: 1, height: 1 },
-        { drawCanvas: new WeatherGraph(), x: 0, y: 2, width: 1, height: 1 },
+        { module: new Status(), x: 0, y: 0, width: 2, height: 1 },
+        { module: new Temperature(3 * 60), x: 1, y: 1, width: 1, height: 1 },
+        { module: new CO2Module(3 * 60), x: 1, y: 2, width: 1, height: 1 },
+        { module: new Weather(), x: 0, y: 1, width: 1, height: 1 },
+        { module: new WeatherGraph(), x: 0, y: 2, width: 1, height: 1 },
     ],
 };
 
-const drawModules = (width: number, height: number): Canvas => {
+const drawModules = async (width: number, height: number): Promise<Canvas> => {
     const moduleCanvas = createCanvas(width, height);
     const ctx = moduleCanvas.getContext('2d');
     const outsidePadding = config.outsidePadding;
@@ -40,12 +40,15 @@ const drawModules = (width: number, height: number): Canvas => {
     const moduleBoxSpaceBetween = 2 * outsidePadding;
 
     for (const module of config.modules) {
+        console.log(`Drawing module ${module.module.constructor.name}`);
+
         const moduleWidth = module.width * moduleBaseWidth + moduleSpaceBetween * (module.width - 1);
         const moduleHeight = module.height * moduleBaseHeight + moduleSpaceBetween * (module.height - 1);
         const moduleBoxWidth = module.width * moduleBoxBaseWidth + moduleBoxSpaceBetween * (module.width - 1);
         const moduleBoxHeight = module.height * moduleBoxBaseHeight + moduleBoxSpaceBetween * (module.height - 1);
 
-        const canvas = module.drawCanvas.draw(moduleWidth, moduleHeight);
+        await module.module.readyPromise;
+        const canvas = module.module.draw(moduleWidth, moduleHeight);
 
         const xStart = (width / config.width) * module.x;
         const yStart = (height / config.height) * module.y;
@@ -119,6 +122,7 @@ const main = async (): Promise<void> => {
     out.on('finish', () => {
         console.log('PNG file saved.');
     });
+    console.log('Finished');
 };
 
-setTimeout(main, 1000);
+main().catch(console.error);

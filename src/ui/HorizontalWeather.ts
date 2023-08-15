@@ -1,73 +1,19 @@
-import { Canvas, Image, createCanvas, loadImage } from 'canvas';
-import * as fs from 'fs/promises';
-
-type Observation = {
-    Temperature: string;
-    WindSpeedMS: string;
-    WindGust: string;
-    Humidity: string;
-    Pressure: string;
-    SnowDepth: string;
-    TotalCloudCover: string;
-    Visibility: string;
-    RI_10MIN: string;
-};
-
-type Forecast = {
-    localtime: string;
-    Temperature: string;
-    SmartSymbol: string;
-    PoP: string;
-    WindSpeedMS: string;
-    Precipitation1h: string;
-    FeelsLike: string;
-};
-
-type WeatherData = {
-    observations: { 843429: Observation[] }; // 843429 is the observation location id for kumpula.
-    forecasts: { forecast: Forecast[] }[];
-};
-
+import { Canvas, createCanvas } from 'canvas';
 import { EInkModule } from './EInkModule';
+import { Forecast, weatherData } from './weatherData';
 
 export class HorizontalWeather extends EInkModule {
-    weatherData: WeatherData;
-    weatherSymbols: { [key: number]: Image };
-
     constructor() {
         super();
-        this.weatherSymbols = {};
-        this.weatherData = { observations: { 843429: [] }, forecasts: [{ forecast: [] }] };
-        this.initializeWeatherData().catch(console.log);
-        this.initializeWeatherSymbols().catch(console.log);
-    }
-
-    private async initializeWeatherData(): Promise<void> {
-        const filePath = 'files/data.json';
-        const data = await fs.readFile(filePath, 'utf8');
-        this.weatherData = JSON.parse(data);
-    }
-
-    private async initializeWeatherSymbols(): Promise<void> {
-        const symbolsDir = 'resources/weatherSymbols';
-        for (const filename of await fs.readdir(symbolsDir)) {
-            if (!filename.endsWith('.svg')) continue;
-
-            const index = parseInt(filename.split('.')[0]);
-            const symbol = await loadImage(`${symbolsDir}/${filename}`);
-            this.weatherSymbols[index] = symbol;
-        }
+        this.readyPromise = Promise.all([weatherData.readyPromise]);
     }
 
     private getText(forecast: Forecast): string {
-        return `${forecast.Temperature}°C (${forecast.FeelsLike}°C)  |  ${forecast.WindSpeedMS} m/s  |  ${forecast.PoP} %`;
+        return `${forecast.temperature}°C (${forecast.feelsLike}°C)  |  ${forecast.windSpeedMS} m/s  |  ${forecast.PoP} %`;
     }
 
     private parseTime(forecast: Forecast): string {
-        const dateString = forecast.localtime;
-        const hour = parseInt(dateString.slice(9, 11), 10);
-        const minute = parseInt(dateString.slice(11, 13), 10);
-        return `${hour}:${minute}`;
+        return `${forecast.localtime.getHours()}:${forecast.localtime.getMinutes()}`;
     }
 
     draw(width: number, height: number): Canvas {
@@ -79,8 +25,11 @@ export class HorizontalWeather extends EInkModule {
         const ctx = canvas.getContext('2d');
 
         const dates = [0, 1, 2, 3, 5, 7, 10, 14];
-        const observation = this.weatherData.observations[843429][0];
-        const forecasts = this.weatherData.forecasts[0].forecast;
+        const observation = weatherData.weatherData?.observation;
+        const forecasts = weatherData.weatherData?.forecasts;
+        if (observation === undefined || forecasts === undefined) {
+            throw new Error("Weather data hasn't been initialized");
+        }
 
         ctx.fillStyle = 'black';
         ctx.textAlign = 'left';
@@ -92,9 +41,9 @@ export class HorizontalWeather extends EInkModule {
         // Draw current
         ctx.font = '30pt Sheriff';
         ctx.textBaseline = 'top';
-        ctx.fillText(`${observation.Temperature}°C`, 10, 10);
+        ctx.fillText(`${observation.temperature}°C`, 10, 10);
         ctx.textAlign = 'right';
-        ctx.fillText(`${observation.WindSpeedMS} m/s`, width - 10, 10);
+        ctx.fillText(`${observation.windSpeedMS} m/s`, width - 10, 10);
         ctx.textAlign = 'left';
 
         // Draw blocks
@@ -120,10 +69,10 @@ export class HorizontalWeather extends EInkModule {
             ctx.fillText(this.parseTime(forecasts[date]), xPos, yPos + blockHeight / 2);
             xPos += ctx.measureText(this.parseTime(forecasts[date])).width + timeSvgPadding;
 
-            const symbolId = parseInt(forecasts[date].SmartSymbol);
+            const symbolId: number = forecasts[date].smartSymbol;
             const imageSize = blockHeight - svgPadding;
-            if (symbolId in this.weatherSymbols) {
-                const img = this.weatherSymbols[symbolId];
+            if (symbolId in weatherData.weatherSymbols) {
+                const img = weatherData.weatherSymbols[symbolId];
                 ctx.drawImage(img, xPos, yPos + (blockHeight - imageSize) / 2, imageSize, imageSize);
             } else {
                 console.error(`Failed to find weather symbol ${symbolId}`); // Find a better way to print/indicate this?

@@ -1,36 +1,8 @@
-import { Canvas, createCanvas, Image } from 'canvas';
+import { Canvas, createCanvas } from 'canvas';
 import { Chart, ChartData, registerables } from 'chart.js';
 import 'chartjs-adapter-moment';
-import * as fs from 'fs/promises';
-
 import { EInkModule } from './EInkModule';
-
-type Observation = {
-    Temperature: string;
-    WindSpeedMS: string;
-    WindGust: string;
-    Humidity: string;
-    Pressure: string;
-    SnowDepth: string;
-    TotalCloudCover: string;
-    Visibility: string;
-    RI_10MIN: string;
-};
-
-type Forecast = {
-    localtime: string;
-    Temperature: string;
-    SmartSymbol: string;
-    PoP: string;
-    WindSpeedMS: string;
-    Precipitation1h: string;
-    FeelsLike: string;
-};
-
-type WeatherData = {
-    observations: { 843429: Observation[] }; // 843429 is the observation location id for kumpula.
-    forecasts: { forecast: Forecast[] }[];
-};
+import { weatherData } from './weatherData';
 
 type DataType = {
     labels: string[];
@@ -40,45 +12,25 @@ type DataType = {
 };
 
 export class WeatherGraph extends EInkModule {
-    weatherData: WeatherData;
-    weatherSymbols: { [key: number]: Image };
-
     constructor() {
         super();
-        this.weatherSymbols = {};
-        this.weatherData = { observations: { 843429: [] }, forecasts: [{ forecast: [] }] };
-        this.initializeWeatherData().catch(console.log);
-    }
-
-    private async initializeWeatherData(): Promise<void> {
-        const filePath = 'files/data.json';
-        const data = await fs.readFile(filePath, 'utf8');
-        this.weatherData = JSON.parse(data);
-    }
-
-    private parseTime(dateString: string): string {
-        const year = parseInt(dateString.slice(0, 4), 10);
-        const month = parseInt(dateString.slice(4, 6), 10) - 1; // Months are zero-based
-        const day = parseInt(dateString.slice(6, 8), 10);
-        const hour = parseInt(dateString.slice(9, 11), 10);
-        const minute = parseInt(dateString.slice(11, 13), 10);
-        const second = parseInt(dateString.slice(13, 15), 10);
-
-        return new Date(Date.UTC(year, month, day, hour, minute, second)).toISOString();
+        this.readyPromise = Promise.all([weatherData.readyPromise]);
     }
 
     private getData(): DataType {
-        const forecasts = this.weatherData.forecasts[0].forecast;
+        const forecasts = weatherData.weatherData?.forecasts;
+        if (forecasts === undefined) throw new Error("Weather data hasn't been initialized");
 
         const labels: string[] = [];
         const tempData: number[] = [];
         const feelslikeData: number[] = [];
         const rainData: number[] = [];
         for (let i = 0; i <= 24; i++) {
-            labels.push(this.parseTime(forecasts[i].localtime));
-            tempData.push(parseFloat(forecasts[i].Temperature));
-            feelslikeData.push(parseFloat(forecasts[i].FeelsLike));
-            rainData.push(parseFloat(forecasts[i].Precipitation1h) + 3 * Math.random()); // TODO: remove random
+            labels.push(forecasts[i].localtime.toISOString());
+            tempData.push(forecasts[i].temperature);
+            feelslikeData.push(forecasts[i].feelsLike);
+            // rainData.push(forecasts[i].precipitation1h + 3 * Math.random()); // TODO: remove random
+            rainData.push(forecasts[i].precipitation1h);
         }
         return { labels, tempData, feelslikeData, rainData };
     }

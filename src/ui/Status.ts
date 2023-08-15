@@ -1,10 +1,19 @@
 import { Canvas, createCanvas } from 'canvas';
 import { EInkModule } from './EInkModule';
+import { weatherData } from './weatherData';
 
 export class Status extends EInkModule {
+    constructor() {
+        super();
+        this.readyPromise = Promise.all([weatherData.readyPromise]);
+    }
+
     draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
+
+        const observation = weatherData.weatherData?.observation;
+        if (observation === undefined) throw new Error("Weather data hasn't been initialized");
 
         ctx.font = '300 120pt sans-serif';
         ctx.textAlign = 'center';
@@ -31,10 +40,10 @@ export class Status extends EInkModule {
 
         ctx.textAlign = 'left';
         ctx.textBaseline = 'bottom';
-        ctx.fillText('15.8°C', 10, height - 10);
+        ctx.fillText(`${observation.temperature}°C`, 10, height - 10);
 
         ctx.textAlign = 'right';
-        ctx.fillText('5 m/s', width - 10, height - 10);
+        ctx.fillText(`${observation.windSpeedMS} m/s`, width - 10, height - 10);
 
         return canvas;
     }
