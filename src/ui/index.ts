@@ -1,10 +1,11 @@
-import { Canvas, createCanvas, loadImage } from 'canvas';
+import { Canvas, createCanvas } from 'canvas';
 import { createWriteStream } from 'fs';
 import { CO2Module } from './CO2';
 import { Status } from './Status';
 import { Temperature } from './Temperature';
 import { Weather } from './Weather';
 import { WeatherGraph } from './WeatherGraph';
+import { getDitheredImage } from './ditherImage';
 
 const config = {
     width: 2,
@@ -94,7 +95,7 @@ const main = async (): Promise<void> => {
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, width, height);
     } else if (outsidePadding > 0) {
-        const img = await loadImage(config.backgroundSrc);
+        const img = await getDitheredImage(config.backgroundSrc, width, height);
         ctx.drawImage(img, 0, 0, width, height);
     }
     ctx.drawImage(moduleCanvas, outsidePadding, outsidePadding);

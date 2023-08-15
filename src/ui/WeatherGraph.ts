@@ -1,7 +1,7 @@
 import { Canvas, createCanvas, Image } from 'canvas';
 import { Chart, ChartData, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
-import { promises as fs } from 'fs';
+import * as fs from 'fs/promises';
 
 import { EInkModule } from './EInkModule';
 
@@ -28,7 +28,7 @@ type Forecast = {
 };
 
 type WeatherData = {
-    observations: { 843429: Observation[] }; // 843429 is the location for the data. Could be typed better :P
+    observations: { 843429: Observation[] }; // 843429 is the observation location id for kumpula.
     forecasts: { forecast: Forecast[] }[];
 };
 

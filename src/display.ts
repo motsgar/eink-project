@@ -1,14 +1,14 @@
-import { Worker } from 'worker_threads';
-import * as path from 'path';
+import { Canvas } from 'canvas';
+import { EventEmitter, once } from 'events';
 import { ENDIANNESS, IMAGE_ROTATION, PIXEL_PACKING, WAVEFORM } from 'it8951';
+import * as path from 'path';
+import { Worker } from 'worker_threads';
 import {
     DisplayOperationError,
     FromWorkerMessage,
     ScreenInfoProps,
     ToWorkerMessage,
 } from './displayWorkerMessageTypes';
-import { EventEmitter, once } from 'events';
-import { Canvas } from 'canvas';
 
 const worker = new Worker(path.resolve(__dirname, 'displayWorker.js'));
 

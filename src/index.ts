@@ -1,6 +1,6 @@
-import 'dotenv/config';
 import { createCanvas } from 'canvas';
-import { drawCanvas, cleanup, initialize } from './display';
+import 'dotenv/config';
+import { cleanup, drawCanvas, initialize } from './display';
 
 const canvas = createCanvas(1000, 800);
 const ctx = canvas.getContext('2d');

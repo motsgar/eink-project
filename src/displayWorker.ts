@@ -1,5 +1,5 @@
-import { parentPort as _parentPort } from 'worker_threads';
 import { ENDIANNESS, IMAGE_ROTATION, IT8951, PIXEL_PACKING, SystemInfo, WAVEFORM } from 'it8951';
+import { parentPort as _parentPort } from 'worker_threads';
 import { DisplayOperationError, FromWorkerMessage, ToWorkerMessage } from './displayWorkerMessageTypes';
 
 if (_parentPort === null) {

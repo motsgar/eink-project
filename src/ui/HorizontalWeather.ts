@@ -1,5 +1,5 @@
 import { Canvas, Image, createCanvas, loadImage } from 'canvas';
-import { existsSync, promises as fs } from 'fs';
+import * as fs from 'fs/promises';
 
 type Observation = {
     Temperature: string;
@@ -24,7 +24,7 @@ type Forecast = {
 };
 
 type WeatherData = {
-    observations: { 843429: Observation[] }; // 843429 is the location for the data. Could be typed better :P
+    observations: { 843429: Observation[] }; // 843429 is the observation location id for kumpula.
     forecasts: { forecast: Forecast[] }[];
 };
 
@@ -49,12 +49,13 @@ export class HorizontalWeather extends EInkModule {
     }
 
     private async initializeWeatherSymbols(): Promise<void> {
-        for (let i = 0; i < 200; i++) {
-            const svgFilePath = `files/symbols/${i}.svg`;
-            if (existsSync(svgFilePath)) {
-                const symbol = await loadImage(svgFilePath);
-                this.weatherSymbols[i] = symbol;
-            }
+        const symbolsDir = 'resources/weatherSymbols';
+        for (const filename of await fs.readdir(symbolsDir)) {
+            if (!filename.endsWith('.svg')) continue;
+
+            const index = parseInt(filename.split('.')[0]);
+            const symbol = await loadImage(`${symbolsDir}/${filename}`);
+            this.weatherSymbols[index] = symbol;
         }
     }
 
