@@ -106,9 +106,9 @@ const main = async (): Promise<void> => {
     for (let i = 0; i < pixels.length; i += 4) {
         const grayscaleValue = Math.round(pixels[i] * 0.3 + pixels[i + 1] * 0.59 + pixels[i + 2] * 0.11) >> 4;
 
-        pixels[i] = grayscaleValue << 4;
-        pixels[i + 1] = grayscaleValue << 4;
-        pixels[i + 2] = grayscaleValue << 4;
+        pixels[i] = grayscaleValue | (grayscaleValue << 4);
+        pixels[i + 1] = grayscaleValue | (grayscaleValue << 4);
+        pixels[i + 2] = grayscaleValue | (grayscaleValue << 4);
     }
     ctx.putImageData(imgData, 0, 0);
 
@@ -121,4 +121,4 @@ const main = async (): Promise<void> => {
     });
 };
 
-setTimeout(main, 3000);
+setTimeout(main, 1000);

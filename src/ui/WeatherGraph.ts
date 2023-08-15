@@ -1,6 +1,6 @@
 import { Canvas, createCanvas, Image } from 'canvas';
 import { Chart, ChartData, registerables } from 'chart.js';
-import 'chartjs-adapter-date-fns';
+import 'chartjs-adapter-moment';
 import * as fs from 'fs/promises';
 
 import { EInkModule } from './EInkModule';

@@ -28,10 +28,10 @@
     "dependencies": {
         "canvas": "^2.11.2",
         "chart.js": "^4.3.3",
-        "chartjs-adapter-date-fns": "^3.0.0",
-        "date-fns": "^2.30.0",
+        "chartjs-adapter-moment": "^1.0.1",
         "dotenv": "^16.3.1",
         "it8951": "^0.1.1",
+        "moment": "^2.29.4",
         "node-fetch": "^2.6.12"
     }
 }

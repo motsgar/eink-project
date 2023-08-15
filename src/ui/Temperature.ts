@@ -1,6 +1,6 @@
 import { Canvas, createCanvas } from 'canvas';
 import { Chart, registerables } from 'chart.js';
-import 'chartjs-adapter-date-fns';
+import 'chartjs-adapter-moment';
 import { EInkModule } from './EInkModule';
 
 export class Temperature extends EInkModule {
