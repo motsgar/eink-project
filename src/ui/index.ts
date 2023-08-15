@@ -1,10 +1,10 @@
 import { Canvas, createCanvas, loadImage } from 'canvas';
 import { createWriteStream } from 'fs';
-import { drawCO2 } from './drawCO2.js';
-import { drawStatus } from './drawStatus.js';
-import { drawTemp } from './drawTemp.js';
-import { drawWeatherGraph } from './drawWeatherGraph.js';
-import { drawVerticalWeather } from './verticalWeather.js';
+import { CO2 } from './CO2.js';
+import { Status } from './Status.js';
+import { Temperature } from './Temperature.js';
+import { Weather } from './Weather.js';
+import { WeatherGraph } from './WeatherGraph.js';
 
 const config = {
     width: 2,
@@ -16,11 +16,11 @@ const config = {
     strokeStyle: '#000000dd',
     backgroundSrc: 'files/wallpapers/wp5-dither.png',
     modules: [
-        { drawCanvas: drawStatus, x: 0, y: 0, width: 2, height: 1 },
-        { drawCanvas: drawTemp, x: 1, y: 1, width: 1, height: 1 },
-        { drawCanvas: drawCO2, x: 1, y: 2, width: 1, height: 1 },
-        { drawCanvas: drawVerticalWeather, x: 0, y: 1, width: 1, height: 1 },
-        { drawCanvas: drawWeatherGraph, x: 0, y: 2, width: 1, height: 1 },
+        { drawCanvas: new Status(), x: 0, y: 0, width: 2, height: 1 },
+        { drawCanvas: new Temperature(), x: 1, y: 1, width: 1, height: 1 },
+        { drawCanvas: new CO2(), x: 1, y: 2, width: 1, height: 1 },
+        { drawCanvas: new Weather(), x: 0, y: 1, width: 1, height: 1 },
+        { drawCanvas: new WeatherGraph(), x: 0, y: 2, width: 1, height: 1 },
     ],
 };
 
@@ -44,7 +44,7 @@ const drawModules = async (width: number, height: number): Promise<Canvas> => {
         const moduleBoxWidth = module.width * moduleBoxBaseWidth + moduleBoxSpaceBetween * (module.width - 1);
         const moduleBoxHeight = module.height * moduleBoxBaseHeight + moduleBoxSpaceBetween * (module.height - 1);
 
-        const canvas = await module.drawCanvas(moduleWidth, moduleHeight);
+        const canvas = await module.drawCanvas.draw(moduleWidth, moduleHeight);
 
         const xStart = (width / config.width) * module.x;
         const yStart = (height / config.height) * module.y;
