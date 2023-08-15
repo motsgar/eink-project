@@ -1,10 +1,10 @@
 import { Canvas, createCanvas, loadImage } from 'canvas';
 import { createWriteStream } from 'fs';
-import { CO2Module } from './CO2.js';
-import { Status } from './Status.js';
-import { Temperature } from './Temperature.js';
-import { Weather } from './Weather.js';
-import { WeatherGraph } from './WeatherGraph.js';
+import { CO2Module } from './CO2';
+import { Status } from './Status';
+import { Temperature } from './Temperature';
+import { Weather } from './Weather';
+import { WeatherGraph } from './WeatherGraph';
 
 const config = {
     width: 2,
