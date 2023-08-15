@@ -4,22 +4,32 @@ import 'chartjs-adapter-date-fns';
 import { EInkModule } from './EInkModule';
 
 export class Temperature extends EInkModule {
-    async draw(width: number, height: number): Promise<Canvas> {
+    temperatureData: { date: string; temperature: number }[];
+    timeRange: number; // minutes
+
+    constructor(timeRange: number) {
+        super();
+
+        this.timeRange = timeRange;
+
+        let date = new Date();
+        this.temperatureData = [{ date: date.toISOString(), temperature: 19 }];
+        for (let i = 1; i < timeRange; i++) {
+            date = new Date(date.getTime() + 1 * 60000);
+            this.temperatureData.push({
+                date: date.toISOString(),
+                temperature: this.temperatureData[i - 1].temperature + +0.53 - Math.random(),
+            });
+        }
+    }
+
+    draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
 
-        let date = new Date();
-        const labels = [date.toISOString()];
-        const tempData = [19];
-        for (let i = 1; i < 60 * 3; i++) {
-            date = new Date(date.getTime() + 1 * 60000);
-            tempData.push(tempData[i - 1] + 0.53 - Math.random());
-            labels.push(date.toISOString());
-        }
-
         const data = {
-            labels: labels,
-            datasets: [{ data: tempData }],
+            labels: this.temperatureData.map(({ date }) => date),
+            datasets: [{ data: this.temperatureData.map(({ temperature }) => temperature) }],
         };
         Chart.register(...registerables);
         new Chart(ctx, {

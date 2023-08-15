@@ -1,9 +1,36 @@
-import { Canvas, createCanvas } from 'canvas';
+import { Canvas, createCanvas, Image } from 'canvas';
 import { Chart, ChartData, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import { promises as fs } from 'fs';
 
 import { EInkModule } from './EInkModule';
+
+type Observation = {
+    Temperature: string;
+    WindSpeedMS: string;
+    WindGust: string;
+    Humidity: string;
+    Pressure: string;
+    SnowDepth: string;
+    TotalCloudCover: string;
+    Visibility: string;
+    RI_10MIN: string;
+};
+
+type Forecast = {
+    localtime: string;
+    Temperature: string;
+    SmartSymbol: string;
+    PoP: string;
+    WindSpeedMS: string;
+    Precipitation1h: string;
+    FeelsLike: string;
+};
+
+type WeatherData = {
+    observations: { 843429: Observation[] }; // 843429 is the location for the data. Could be typed better :P
+    forecasts: { forecast: Forecast[] }[];
+};
 
 type DataType = {
     labels: string[];
@@ -13,6 +40,22 @@ type DataType = {
 };
 
 export class WeatherGraph extends EInkModule {
+    weatherData: WeatherData;
+    weatherSymbols: { [key: number]: Image };
+
+    constructor() {
+        super();
+        this.weatherSymbols = {};
+        this.weatherData = { observations: { 843429: [] }, forecasts: [{ forecast: [] }] };
+        this.initializeWeatherData().catch(console.log);
+    }
+
+    private async initializeWeatherData(): Promise<void> {
+        const filePath = 'files/data.json';
+        const data = await fs.readFile(filePath, 'utf8');
+        this.weatherData = JSON.parse(data);
+    }
+
     private parseTime(dateString: string): string {
         const year = parseInt(dateString.slice(0, 4), 10);
         const month = parseInt(dateString.slice(4, 6), 10) - 1; // Months are zero-based
@@ -24,29 +67,26 @@ export class WeatherGraph extends EInkModule {
         return new Date(Date.UTC(year, month, day, hour, minute, second)).toISOString();
     }
 
-    private async getData(): Promise<DataType> {
-        const filePath = 'files/data.json';
-        const data = await fs.readFile(filePath, 'utf8');
-        const jsonData = JSON.parse(data);
-        const forecasts = jsonData['forecasts'][0]['forecast'];
+    private getData(): DataType {
+        const forecasts = this.weatherData.forecasts[0].forecast;
 
         const labels: string[] = [];
         const tempData: number[] = [];
         const feelslikeData: number[] = [];
         const rainData: number[] = [];
         for (let i = 0; i <= 24; i++) {
-            labels.push(this.parseTime(forecasts[i]['localtime']));
-            tempData.push(forecasts[i]['Temperature']);
-            feelslikeData.push(forecasts[i]['FeelsLike']);
-            rainData.push(parseFloat(forecasts[i]['Precipitation1h']) + 3 * Math.random()); // TODO: remove random
+            labels.push(this.parseTime(forecasts[i].localtime));
+            tempData.push(parseFloat(forecasts[i].Temperature));
+            feelslikeData.push(parseFloat(forecasts[i].FeelsLike));
+            rainData.push(parseFloat(forecasts[i].Precipitation1h) + 3 * Math.random()); // TODO: remove random
         }
         return { labels, tempData, feelslikeData, rainData };
     }
-    async draw(width: number, height: number): Promise<Canvas> {
+    draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
 
-        const { labels, tempData, feelslikeData, rainData } = await this.getData();
+        const { labels, tempData, feelslikeData, rainData } = this.getData();
 
         const graphData: ChartData = {
             labels: labels,

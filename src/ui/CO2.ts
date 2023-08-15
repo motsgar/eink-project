@@ -3,23 +3,33 @@ import { Chart, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import { EInkModule } from './EInkModule';
 
-export class CO2 extends EInkModule {
-    async draw(width: number, height: number): Promise<Canvas> {
+export class CO2Module extends EInkModule {
+    CO2Data: { date: string; CO2: number }[];
+    timeRange: number; // minutes
+
+    constructor(timeRange: number) {
+        super();
+
+        this.timeRange = timeRange;
+
+        let date = new Date();
+        this.CO2Data = [{ date: date.toISOString(), CO2: 600 }];
+        for (let i = 1; i < timeRange; i++) {
+            date = new Date(date.getTime() + 1 * 60000);
+            this.CO2Data.push({
+                date: date.toISOString(),
+                CO2: this.CO2Data[i - 1].CO2 + 53 - 100 * Math.random(),
+            });
+        }
+    }
+
+    draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
 
-        let date = new Date();
-        const labels = [date.toISOString()];
-        const CO2Data = [600];
-        for (let i = 1; i < 60 * 3; i++) {
-            date = new Date(date.getTime() + 1 * 60000);
-            CO2Data.push(CO2Data[i - 1] + 53 - 100 * Math.random());
-            labels.push(date.toISOString());
-        }
-
         const data = {
-            labels: labels,
-            datasets: [{ data: CO2Data }],
+            labels: this.CO2Data.map(({ date }) => date),
+            datasets: [{ data: this.CO2Data.map(({ CO2 }) => CO2) }],
         };
         Chart.register(...registerables);
         new Chart(ctx, {

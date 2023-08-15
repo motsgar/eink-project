@@ -1,6 +1,6 @@
 import { Canvas, createCanvas, loadImage } from 'canvas';
 import { createWriteStream } from 'fs';
-import { CO2 } from './CO2.js';
+import { CO2Module } from './CO2.js';
 import { Status } from './Status.js';
 import { Temperature } from './Temperature.js';
 import { Weather } from './Weather.js';
@@ -17,14 +17,14 @@ const config = {
     backgroundSrc: 'files/wallpapers/wp5-dither.png',
     modules: [
         { drawCanvas: new Status(), x: 0, y: 0, width: 2, height: 1 },
-        { drawCanvas: new Temperature(), x: 1, y: 1, width: 1, height: 1 },
-        { drawCanvas: new CO2(), x: 1, y: 2, width: 1, height: 1 },
+        { drawCanvas: new Temperature(3 * 60), x: 1, y: 1, width: 1, height: 1 },
+        { drawCanvas: new CO2Module(3 * 60), x: 1, y: 2, width: 1, height: 1 },
         { drawCanvas: new Weather(), x: 0, y: 1, width: 1, height: 1 },
         { drawCanvas: new WeatherGraph(), x: 0, y: 2, width: 1, height: 1 },
     ],
 };
 
-const drawModules = async (width: number, height: number): Promise<Canvas> => {
+const drawModules = (width: number, height: number): Canvas => {
     const moduleCanvas = createCanvas(width, height);
     const ctx = moduleCanvas.getContext('2d');
     const outsidePadding = config.outsidePadding;
@@ -44,7 +44,7 @@ const drawModules = async (width: number, height: number): Promise<Canvas> => {
         const moduleBoxWidth = module.width * moduleBoxBaseWidth + moduleBoxSpaceBetween * (module.width - 1);
         const moduleBoxHeight = module.height * moduleBoxBaseHeight + moduleBoxSpaceBetween * (module.height - 1);
 
-        const canvas = await module.drawCanvas.draw(moduleWidth, moduleHeight);
+        const canvas = module.drawCanvas.draw(moduleWidth, moduleHeight);
 
         const xStart = (width / config.width) * module.x;
         const yStart = (height / config.height) * module.y;
@@ -120,4 +120,4 @@ const main = async (): Promise<void> => {
     });
 };
 
-main().then().catch(console.log);
+setTimeout(main, 3000);

@@ -2,7 +2,7 @@ import { Canvas, createCanvas } from 'canvas';
 import { EInkModule } from './EInkModule';
 
 export class Status extends EInkModule {
-    async draw(width: number, height: number): Promise<Canvas> {
+    draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
 
