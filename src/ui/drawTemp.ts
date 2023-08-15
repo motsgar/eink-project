@@ -1,14 +1,14 @@
-import { createCanvas } from 'canvas';
+import { Canvas, createCanvas } from 'canvas';
 import { Chart, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 
-export const drawTemp = (width, height) => {
+export const drawTemp = (width: number, height: number): Canvas => {
     const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
 
     let date = new Date();
-    let labels = [date.toISOString()];
-    let tempData = [19];
+    const labels = [date.toISOString()];
+    const tempData = [19];
     for (let i = 1; i < 60 * 3; i++) {
         date = new Date(date.getTime() + 1 * 60000);
         tempData.push(tempData[i - 1] + 0.53 - Math.random());

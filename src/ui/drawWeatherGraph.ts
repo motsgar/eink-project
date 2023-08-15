@@ -1,36 +1,35 @@
-import { createCanvas } from 'canvas';
-import { Chart, registerables } from 'chart.js';
+import { Canvas, createCanvas } from 'canvas';
+import { Chart, ChartData, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import { promises as fs } from 'fs';
 
-const readJsonFile = async (filePath) => {
-    try {
-        const data = await fs.readFile(filePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        throw error;
-    }
-};
-const parseTime = (dateString) => {
-    const year = parseInt(dateString.substr(0, 4), 10);
-    const month = parseInt(dateString.substr(4, 2), 10) - 1;
-    const day = parseInt(dateString.substr(6, 2), 10);
-    const hour = parseInt(dateString.substr(9, 2), 10);
-    const minute = parseInt(dateString.substr(11, 2), 10);
-    const second = parseInt(dateString.substr(13, 2), 10);
+const parseTime = (dateString: string): string => {
+    const year = parseInt(dateString.slice(0, 4), 10);
+    const month = parseInt(dateString.slice(4, 6), 10) - 1; // Months are zero-based
+    const day = parseInt(dateString.slice(6, 8), 10);
+    const hour = parseInt(dateString.slice(9, 11), 10);
+    const minute = parseInt(dateString.slice(11, 13), 10);
+    const second = parseInt(dateString.slice(13, 15), 10);
 
     return new Date(Date.UTC(year, month, day, hour, minute, second)).toISOString();
 };
 
-const getData = async () => {
+type DataType = {
+    labels: string[];
+    tempData: number[];
+    feelslikeData: number[];
+    rainData: number[];
+};
+const getData = async (): Promise<DataType> => {
     const filePath = 'files/data.json';
-    const jsonData = await readJsonFile(filePath);
-    let forecasts = jsonData['forecasts'][0]['forecast'];
+    const data = await fs.readFile(filePath, 'utf8');
+    const jsonData = JSON.parse(data);
+    const forecasts = jsonData['forecasts'][0]['forecast'];
 
-    let labels = [];
-    let tempData = [];
-    let feelslikeData = [];
-    let rainData = [];
+    const labels: string[] = [];
+    const tempData: number[] = [];
+    const feelslikeData: number[] = [];
+    const rainData: number[] = [];
     for (let i = 0; i <= 24; i++) {
         labels.push(parseTime(forecasts[i]['localtime']));
         tempData.push(forecasts[i]['Temperature']);
@@ -40,13 +39,13 @@ const getData = async () => {
     return { labels, tempData, feelslikeData, rainData };
 };
 
-export const drawWeatherGraph = async (width, height) => {
+export const drawWeatherGraph = async (width: number, height: number): Promise<Canvas> => {
     const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
 
     const { labels, tempData, feelslikeData, rainData } = await getData();
 
-    const graphData = {
+    const graphData: ChartData = {
         labels: labels,
         datasets: [
             { data: tempData },

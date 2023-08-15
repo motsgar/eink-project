@@ -1,6 +1,6 @@
-import { createCanvas } from 'canvas';
+import { Canvas, createCanvas } from 'canvas';
 
-export const drawStatus = (width, height) => {
+export const drawStatus = (width: number, height: number): Canvas => {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
@@ -11,7 +11,7 @@ export const drawStatus = (width, height) => {
     ctx.fillText(new Date().toTimeString().substring(0, 5), width / 2, height / 2 - 25);
 
     ctx.font = '22pt sans-serif';
-    const options = {
+    const options: Intl.DateTimeFormatOptions = {
         weekday: 'long',
         year: 'numeric',
         month: 'long',

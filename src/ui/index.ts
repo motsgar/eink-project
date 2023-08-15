@@ -1,4 +1,4 @@
-import { createCanvas, loadImage } from 'canvas';
+import { Canvas, createCanvas, loadImage } from 'canvas';
 import { createWriteStream } from 'fs';
 import { drawCO2 } from './drawCO2.js';
 import { drawStatus } from './drawStatus.js';
@@ -24,7 +24,7 @@ const config = {
     ],
 };
 
-const drawModules = async (width, height) => {
+const drawModules = async (width: number, height: number): Promise<Canvas> => {
     const moduleCanvas = createCanvas(width, height);
     const ctx = moduleCanvas.getContext('2d');
     const outsidePadding = config.outsidePadding;
@@ -77,7 +77,7 @@ const drawModules = async (width, height) => {
     return moduleCanvas;
 };
 
-const main = async () => {
+const main = async (): Promise<void> => {
     const width = 1872;
     const height = 1404;
     const outsidePadding = config.outsidePadding;
@@ -100,8 +100,8 @@ const main = async () => {
     ctx.drawImage(moduleCanvas, outsidePadding, outsidePadding);
 
     // Grayscale conversion
-    let imgData = ctx.getImageData(0, 0, width, height);
-    let pixels = imgData.data;
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const pixels = imgData.data;
     for (let i = 0; i < pixels.length; i += 4) {
         const grayscaleValue = Math.round(pixels[i] * 0.3 + pixels[i + 1] * 0.59 + pixels[i + 2] * 0.11) >> 4;
 
@@ -120,4 +120,4 @@ const main = async () => {
     });
 };
 
-main();
+main().then().catch(console.log);
