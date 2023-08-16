@@ -13,7 +13,7 @@ export class Weather extends EInkModule {
             `${forecast.temperature}°`,
             `${forecast.feelsLike}°`,
             `${forecast.windSpeedMS}`,
-            `${forecast.PoP}%`,
+            `${forecast.PoP}`,
             `${forecast.precipitation1h}`,
         ];
     }
@@ -30,13 +30,13 @@ export class Weather extends EInkModule {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
 
-        const times = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        const times = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         const forecasts = weatherData.weatherData?.forecasts;
         const weatherSymbols = weatherData.weatherSymbols;
         if (forecasts === undefined) throw new Error("Weather data hasn't been initialized");
 
         ctx.fillStyle = 'black';
-        ctx.font = '20pt Sheriff';
+        ctx.font = '20pt sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         const blockWidth = width / times.length;
@@ -83,10 +83,25 @@ export class Weather extends EInkModule {
             yPos += imageSize + svgTextPadding;
 
             const text = this.getText(forecasts[date]);
+            let i = 0;
             for (const line of text) {
+                ctx.textBaseline = 'top';
                 ctx.fillText(line, xPos + blockWidth / 2, yPos);
                 measureText = ctx.measureText(line);
+
+                // Draw small percentage sign
+                if (i === 3) {
+                    const textHeight = measureText.actualBoundingBoxAscent + measureText.actualBoundingBoxDescent;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'bottom';
+                    ctx.font = '14pt sans-serif';
+                    ctx.fillText('%', xPos + blockWidth / 2 + measureText.width / 2, yPos + textHeight + 10);
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    ctx.font = '20pt sans-serif';
+                }
                 yPos += measureText.actualBoundingBoxAscent + measureText.actualBoundingBoxDescent + textPadding;
+                i += 1;
             }
             xPos += blockWidth;
         }

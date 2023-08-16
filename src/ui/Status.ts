@@ -77,7 +77,7 @@ export class Status extends EInkModule {
 
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        let text = [`${sensorData_.temperature}°C`, `${sensorData_.co2} ppm`];
+        let text = [`${sensorData_.temperature.toFixed(1)}°C`, `${sensorData_.co2.toFixed(1)} ppm`];
         yPos = 10;
         for (const line of text) {
             ctx.fillText(line, 10, yPos);
@@ -87,7 +87,7 @@ export class Status extends EInkModule {
 
         ctx.textAlign = 'left';
         ctx.textBaseline = 'bottom';
-        text = [`${sensorData_.humidity} %`, `${sensorData_.pressure} atm`];
+        text = [`${sensorData_.humidity.toFixed(1)} %`, `${sensorData_.pressure.toFixed(1)} hPa`];
         yPos = height - 10;
         for (const line of text.reverse()) {
             ctx.fillText(line, 10, yPos);

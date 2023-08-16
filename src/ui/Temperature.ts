@@ -20,7 +20,7 @@ export class TemperatureGraph extends EInkModule {
 
         const sensorData_ = sensorData.getSensorData(this.timeRange * 60);
         const data = {
-            labels: sensorData_.map(({ timestamp }) => timestamp),
+            labels: sensorData_.map(({ timestamp }) => timestamp.toISOString()),
             datasets: [{ data: sensorData_.map(({ temperature }) => temperature) }],
         };
         Chart.register(...registerables);

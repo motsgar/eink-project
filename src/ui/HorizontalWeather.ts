@@ -39,7 +39,7 @@ export class HorizontalWeather extends EInkModule {
         const blockHeight = (height - yStart) / dates.length;
 
         // Draw current
-        ctx.font = '30pt Sheriff';
+        ctx.font = '30pt sans-serif';
         ctx.textBaseline = 'top';
         ctx.fillText(`${observation.temperature}°C`, 10, 10);
         ctx.textAlign = 'right';
@@ -47,7 +47,7 @@ export class HorizontalWeather extends EInkModule {
         ctx.textAlign = 'left';
 
         // Draw blocks
-        ctx.font = '20pt Sheriff';
+        ctx.font = '20pt sans-serif';
         ctx.textBaseline = 'middle';
         let blockWidth = 0;
         for (const date of dates) {

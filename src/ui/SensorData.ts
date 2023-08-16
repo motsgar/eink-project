@@ -19,6 +19,31 @@ class SensorData {
     constructor() {
         this.sensorHistory = [];
 
+        // Generate fake history 8)
+        const amount = 7 * 24 * 60;
+        const co2Data = co2Sensor.getFakeData(amount).reverse();
+        const envData = envSensor.getFakeData(amount).reverse();
+        const date = new Date();
+        date.setMilliseconds(0);
+        date.setSeconds(0);
+        for (let i = 0; i < amount; i++) {
+            const data = {
+                timestamp: new Date(date.getTime()),
+                co2: co2Data[i],
+                ...envData[i],
+            };
+            this.sensorHistory.push(data);
+            this.sensorHistory = this.sensorHistory.filter((sensorData) => {
+                const timeDiff = data.timestamp.getTime() - sensorData.timestamp.getTime();
+                return (
+                    timeDiff < 24 * 60 * 60 * 1000 ||
+                    (timeDiff < 8 * 24 * 60 * 60 * 1000 && sensorData.timestamp.getSeconds() === 0)
+                );
+            });
+            date.setTime(date.getTime() - 60 * 1000);
+        }
+        // Fake history finisheds
+
         this.readyPromise = new Promise((resolve, reject) => {
             this.sensorDataLoop()
                 .then(() => {
@@ -35,14 +60,13 @@ class SensorData {
         const milliseconds = nextDate.getMilliseconds();
         nextDate.setMilliseconds(1000);
         return new Promise((resolve) => {
-            setTimeout(
-                async () => {
-                    resolve();
-                    await this.readSensorData(nextDate);
-                    void this.sensorDataLoop();
-                },
-                1000 - milliseconds - OFFSET,
-            );
+            let timeoutTime = 1000 - milliseconds - OFFSET;
+            if (timeoutTime < 0) timeoutTime += 1000;
+            setTimeout(async () => {
+                await this.readSensorData(nextDate);
+                resolve();
+                void this.sensorDataLoop();
+            }, timeoutTime);
         });
     }
 
@@ -80,7 +104,7 @@ class SensorData {
     }
 
     private async readSensorData(timestamp: Date): Promise<void> {
-        Promise.all([co2Sensor.getData(), envSensor.getData()])
+        await Promise.all([co2Sensor.getData(), envSensor.getData()])
             .then(async ([co2Data, envData]) => {
                 this.latestData = {
                     timestamp,
