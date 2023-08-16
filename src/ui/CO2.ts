@@ -2,34 +2,26 @@ import { Canvas, createCanvas } from 'canvas';
 import { Chart, registerables } from 'chart.js';
 import 'chartjs-adapter-moment';
 import { EInkModule } from './EInkModule';
+import { sensorData } from './SensorData';
 
-export class CO2Module extends EInkModule {
-    CO2Data: { date: string; CO2: number }[];
+export class CO2Graph extends EInkModule {
     timeRange: number; // minutes
 
     constructor(timeRange: number) {
         super();
 
         this.timeRange = timeRange;
-
-        let date = new Date();
-        this.CO2Data = [{ date: date.toISOString(), CO2: 600 }];
-        for (let i = 1; i < timeRange; i++) {
-            date = new Date(date.getTime() + 1 * 60000);
-            this.CO2Data.push({
-                date: date.toISOString(),
-                CO2: this.CO2Data[i - 1].CO2 + 53 - 100 * Math.random(),
-            });
-        }
+        this.readyPromise = Promise.all([sensorData.readyPromise]);
     }
 
     draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
 
+        const sensorData_ = sensorData.getSensorData(this.timeRange * 60);
         const data = {
-            labels: this.CO2Data.map(({ date }) => date),
-            datasets: [{ data: this.CO2Data.map(({ CO2 }) => CO2) }],
+            labels: sensorData_.map(({ timestamp }) => timestamp.toISOString()),
+            datasets: [{ data: sensorData_.map(({ co2 }) => co2) }],
         };
         Chart.register(...registerables);
         new Chart(ctx, {

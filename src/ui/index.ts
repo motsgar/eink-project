@@ -1,8 +1,8 @@
 import { Canvas, createCanvas } from 'canvas';
 import { createWriteStream } from 'fs';
-import { CO2Module } from './CO2';
+import { CO2Graph } from './CO2';
 import { Status } from './Status';
-import { Temperature } from './Temperature';
+import { TemperatureGraph } from './Temperature';
 import { Weather } from './Weather';
 import { WeatherGraph } from './WeatherGraph';
 import { getDitheredImage } from './ditherImage';
@@ -18,8 +18,8 @@ const config = {
     backgroundSrc: 'files/wallpapers/wp5.png',
     modules: [
         { module: new Status(), x: 0, y: 0, width: 2, height: 1 },
-        { module: new Temperature(3 * 60), x: 1, y: 1, width: 1, height: 1 },
-        { module: new CO2Module(3 * 60), x: 1, y: 2, width: 1, height: 1 },
+        { module: new TemperatureGraph(3 * 60), x: 1, y: 1, width: 1, height: 1 },
+        { module: new CO2Graph(3 * 60), x: 1, y: 2, width: 1, height: 1 },
         { module: new Weather(), x: 0, y: 1, width: 1, height: 1 },
         { module: new WeatherGraph(), x: 0, y: 2, width: 1, height: 1 },
     ],

@@ -2,7 +2,6 @@ import { Image, loadImage } from 'canvas';
 import * as fs from 'fs/promises';
 import * as moment from 'moment-timezone';
 import fetch from 'node-fetch';
-import EventEmitter = require('events');
 
 type WindCompass = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 type shortTime = `${number}`;
@@ -133,24 +132,21 @@ export type WeatherDataType = {
     warnings: Warnings;
 };
 
-class WeatherData extends EventEmitter {
+class WeatherData {
     weatherData?: WeatherDataType;
     weatherSymbols: { [key: number]: Image };
     readyPromise: Promise<void>;
 
     constructor() {
-        super();
         this.weatherSymbols = {};
 
         this.readyPromise = new Promise((resolve, reject) => {
             Promise.all([this.initializeWeatherSymbols(), this.fetchWeatherData()])
                 .then(() => {
-                    this.emit('WeatherDataInit');
                     resolve();
                     setInterval(
                         async () => {
                             await this.fetchWeatherData().catch(console.error);
-                            this.emit('WeatherData');
                         },
                         1000 * 60 * 15,
                     );

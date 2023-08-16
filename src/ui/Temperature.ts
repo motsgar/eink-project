@@ -2,34 +2,26 @@ import { Canvas, createCanvas } from 'canvas';
 import { Chart, registerables } from 'chart.js';
 import 'chartjs-adapter-moment';
 import { EInkModule } from './EInkModule';
+import { sensorData } from './SensorData';
 
-export class Temperature extends EInkModule {
-    temperatureData: { date: string; temperature: number }[];
+export class TemperatureGraph extends EInkModule {
     timeRange: number; // minutes
 
     constructor(timeRange: number) {
         super();
 
         this.timeRange = timeRange;
-
-        let date = new Date();
-        this.temperatureData = [{ date: date.toISOString(), temperature: 19 }];
-        for (let i = 1; i < timeRange; i++) {
-            date = new Date(date.getTime() + 1 * 60000);
-            this.temperatureData.push({
-                date: date.toISOString(),
-                temperature: this.temperatureData[i - 1].temperature + +0.53 - Math.random(),
-            });
-        }
+        this.readyPromise = Promise.all([sensorData.readyPromise]);
     }
 
     draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
 
+        const sensorData_ = sensorData.getSensorData(this.timeRange * 60);
         const data = {
-            labels: this.temperatureData.map(({ date }) => date),
-            datasets: [{ data: this.temperatureData.map(({ temperature }) => temperature) }],
+            labels: sensorData_.map(({ timestamp }) => timestamp),
+            datasets: [{ data: sensorData_.map(({ temperature }) => temperature) }],
         };
         Chart.register(...registerables);
         new Chart(ctx, {

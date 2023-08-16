@@ -1,5 +1,6 @@
 import { Canvas, Image, createCanvas, loadImage } from 'canvas';
 import { EInkModule } from './EInkModule';
+import { sensorData } from './SensorData';
 import { weatherData } from './weatherData';
 
 export class Status extends EInkModule {
@@ -8,7 +9,7 @@ export class Status extends EInkModule {
 
     constructor() {
         super();
-        this.readyPromise = Promise.all([this.loadIcons(), weatherData.readyPromise]);
+        this.readyPromise = Promise.all([this.loadIcons(), weatherData.readyPromise, sensorData.readyPromise]);
     }
 
     private async loadIcons(): Promise<void> {
@@ -23,11 +24,15 @@ export class Status extends EInkModule {
         const observation = weatherData.weatherData?.observation;
         const sunInfo = weatherData.weatherData?.sunInfo;
         const warnings = weatherData.weatherData?.warnings;
+        const sensorData_ = sensorData.latestData;
         if (warnings === undefined || sunInfo === undefined || observation === undefined) {
             throw new Error("Weather data hasn't been initialized");
         }
         if (this.sunriseIcon === undefined || this.sunsetIcon === undefined) {
             throw new Error("Status icons haven't been initialized");
+        }
+        if (sensorData_ === undefined) {
+            throw new Error("Sensor data hasn't been initialized");
         }
 
         // Main clock + date
@@ -72,7 +77,7 @@ export class Status extends EInkModule {
 
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        let text = ['25.6°C', '713 ppm'];
+        let text = [`${sensorData_.temperature}°C`, `${sensorData_.co2} ppm`];
         yPos = 10;
         for (const line of text) {
             ctx.fillText(line, 10, yPos);
@@ -82,7 +87,7 @@ export class Status extends EInkModule {
 
         ctx.textAlign = 'left';
         ctx.textBaseline = 'bottom';
-        text = ['21 %', '1003 atm'];
+        text = [`${sensorData_.humidity} %`, `${sensorData_.pressure} atm`];
         yPos = height - 10;
         for (const line of text.reverse()) {
             ctx.fillText(line, 10, yPos);
