@@ -19,39 +19,16 @@ class SensorData {
     constructor() {
         this.sensorHistory = [];
 
-        // Generate fake history 8)
-        const amount = 7 * 24 * 60;
-        const co2Data = co2Sensor.getFakeData(amount).reverse();
-        const envData = envSensor.getFakeData(amount).reverse();
-        const date = new Date();
-        date.setMilliseconds(0);
-        date.setSeconds(0);
-        for (let i = 0; i < amount; i++) {
-            const data = {
-                timestamp: new Date(date.getTime()),
-                co2: co2Data[i],
-                ...envData[i],
-            };
-            this.sensorHistory.push(data);
-            this.sensorHistory = this.sensorHistory.filter((sensorData) => {
-                const timeDiff = data.timestamp.getTime() - sensorData.timestamp.getTime();
-                return (
-                    timeDiff < 24 * 60 * 60 * 1000 ||
-                    (timeDiff < 8 * 24 * 60 * 60 * 1000 && sensorData.timestamp.getSeconds() === 0)
-                );
-            });
-            date.setTime(date.getTime() - 60 * 1000);
-        }
-        // Fake history finisheds
-
         this.readyPromise = new Promise((resolve, reject) => {
-            this.sensorDataLoop()
+            this.writeFakeData()
                 .then(() => {
-                    resolve();
+                    this.readDataFromFile()
+                        .then(() => {
+                            this.sensorDataLoop().then(resolve).catch(reject);
+                        })
+                        .catch(reject);
                 })
-                .catch((error) => {
-                    reject(error);
-                });
+                .catch(reject);
         });
     }
 
@@ -70,6 +47,81 @@ class SensorData {
         });
     }
 
+    private filterSensorData(): void {
+        const date = new Date();
+        this.sensorHistory = this.sensorHistory.filter((sensorData) => {
+            const timeDiff = date.getTime() - sensorData.timestamp.getTime();
+            return (
+                timeDiff < 60 * 60 * 1000 ||
+                (timeDiff < 8 * 24 * 60 * 60 * 1000 && sensorData.timestamp.getSeconds() == 0)
+            );
+        });
+    }
+
+    private async writeFakeData(): Promise<void> {
+        const dataDir = 'sensorData';
+        let dirExists = false;
+        await fs.mkdir(dataDir).catch(() => {
+            dirExists = true;
+        });
+        if (dirExists) return;
+
+        console.log("\nSensorData history doesn't exist. Creating fake data...");
+
+        const amount = 7 * 24 * 60 * 60;
+        const co2Data = co2Sensor.getFakeData(amount);
+        const envData = envSensor.getFakeData(amount);
+        const date = new Date();
+        const now = new Date();
+        date.setMilliseconds(0);
+        date.setSeconds(0);
+        date.setTime(date.getTime() - amount * 1000);
+        for (let i = 0; i < amount; i++) {
+            if (i % 100000 === 0) {
+                console.log(`${i}/${amount}`);
+            }
+
+            const timeDiff = now.getTime() - date.getTime();
+            if (timeDiff < 60 * 60 * 1000 || (timeDiff < 8 * 24 * 60 * 60 * 1000 && date.getSeconds() == 0)) {
+                const data = {
+                    timestamp: new Date(date.getTime()),
+                    co2: co2Data[i],
+                    ...envData[i],
+                };
+                await this.setSensorData(data);
+            }
+
+            date.setTime(date.getTime() + 1000);
+        }
+        this.sensorHistory.length = 0;
+        console.log();
+    }
+
+    private async readDataFromFile(): Promise<void> {
+        const dataDir = 'sensorData';
+        await fs.mkdir(dataDir).catch(() => {}); // Create dir if it doesn't exist
+
+        const files = await fs.readdir(dataDir);
+        for (const filename of files) {
+            if (!filename.endsWith('.bin')) continue;
+
+            const basename = filename.split('.')[0];
+            if (!filename.endsWith('thin.bin') && files.includes(`${basename}.thin.bin`)) continue;
+
+            const data = await fs.readFile(`${dataDir}/${filename}`);
+            for (let i = 0; i < data.length; i += 5 * 8) {
+                const timestamp = new Date(Number(data.readBigInt64LE(i)));
+                const co2 = data.readFloatLE(i + 8);
+                const temperature = data.readFloatLE(i + 16);
+                const humidity = data.readFloatLE(i + 24);
+                const pressure = data.readFloatLE(i + 32);
+                this.sensorHistory.push({ timestamp, co2, temperature, humidity, pressure });
+            }
+        }
+
+        this.filterSensorData();
+    }
+
     getSensorData(timePeriod: number, onlyMinutes = true): SensorDataType[] {
         if (timePeriod > 7 * 24 * 60 * 60) throw new Error('Tried to get sensor data for more than 7 days'); // TODO:
 
@@ -82,17 +134,11 @@ class SensorData {
 
     private async setSensorData(data: SensorDataType): Promise<void> {
         this.sensorHistory.push(data);
-        this.sensorHistory = this.sensorHistory.filter((sensorData) => {
-            const timeDiff = data.timestamp.getTime() - sensorData.timestamp.getTime();
-            return (
-                timeDiff < 24 * 60 * 60 * 1000 ||
-                (timeDiff < 8 * 24 * 60 * 60 * 1000 && sensorData.timestamp.getSeconds() == 0)
-            );
-        });
+        this.filterSensorData();
 
         const year = data.timestamp.getUTCFullYear().toString().padStart(4, '0');
-        const month = data.timestamp.getUTCMonth().toString().padStart(4, '2');
-        const day = data.timestamp.getUTCDay().toString().padStart(4, '2');
+        const month = data.timestamp.getUTCMonth().toString().padStart(2, '2');
+        const day = data.timestamp.getUTCDay().toString().padStart(2, '2');
         const filepath = `sensorData/${year}-${month}-${day}.bin`;
         const buffer = Buffer.allocUnsafe(5 * 8);
         buffer.writeBigInt64LE(BigInt(data.timestamp.getTime()));
