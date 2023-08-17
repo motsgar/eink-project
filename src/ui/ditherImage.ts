@@ -1,11 +1,14 @@
 import { Image } from 'canvas';
 import { spawn } from 'child_process';
-import * as fs from 'fs/promises';
 
-export const getDitheredImage = async (filepath: string, width: number, height: number): Promise<Image> => {
-    const inputBuffer = await fs.readFile(filepath);
-
+export const ditherImage = async (inputImageBuffer: Buffer, width?: number, height?: number): Promise<Image> => {
     return new Promise((resolve, reject) => {
+        if (width === undefined) {
+            const image = new Image();
+            image.src = inputImageBuffer;
+            width = image.width;
+            height = image.height;
+        }
         const args = [
             '-',
             '-resize',
@@ -26,7 +29,7 @@ export const getDitheredImage = async (filepath: string, width: number, height: 
         ];
         const convertProcess = spawn('convert', args);
 
-        convertProcess.stdin.write(inputBuffer);
+        convertProcess.stdin.write(inputImageBuffer);
         convertProcess.stdin.end();
 
         let outputBuffer = Buffer.from([]);

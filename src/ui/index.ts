@@ -1,6 +1,7 @@
 import { Canvas, createCanvas } from 'canvas';
 import { createWriteStream } from 'fs';
-import { getDitheredImage } from './ditherImage';
+import * as fs from 'fs/promises';
+import { ditherImage } from './ditherImage';
 import { CO2Graph } from './modules/CO2';
 import { Status } from './modules/Status';
 import { TemperatureGraph } from './modules/Temperature';
@@ -98,8 +99,9 @@ const main = async (): Promise<void> => {
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, width, height);
     } else if (outsidePadding > 0) {
-        const img = await getDitheredImage(config.backgroundSrc, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
+        const imageBuffer = await fs.readFile(config.backgroundSrc);
+        const backgroundImage = await ditherImage(imageBuffer, width, height);
+        ctx.drawImage(backgroundImage, 0, 0, width, height);
     }
     ctx.drawImage(moduleCanvas, outsidePadding, outsidePadding);
 
