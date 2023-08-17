@@ -1,6 +1,6 @@
 import { Canvas, createCanvas } from 'canvas';
+import { Forecast, weatherData } from '../weatherData';
 import { EInkModule } from './EInkModule';
-import { Forecast, weatherData } from './weatherData';
 
 export class HorizontalWeather extends EInkModule {
     constructor() {

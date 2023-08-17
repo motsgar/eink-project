@@ -1,11 +1,11 @@
 import { Canvas, createCanvas } from 'canvas';
 import { createWriteStream } from 'fs';
-import { CO2Graph } from './CO2';
-import { Status } from './Status';
-import { TemperatureGraph } from './Temperature';
-import { Weather } from './Weather';
-import { WeatherGraph } from './WeatherGraph';
 import { getDitheredImage } from './ditherImage';
+import { CO2Graph } from './modules/CO2';
+import { Status } from './modules/Status';
+import { TemperatureGraph } from './modules/Temperature';
+import { Weather } from './modules/Weather';
+import { WeatherGraph } from './modules/WeatherGraph';
 
 const config = {
     width: 2,

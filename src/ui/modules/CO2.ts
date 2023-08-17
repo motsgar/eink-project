@@ -1,8 +1,8 @@
 import { Canvas, createCanvas } from 'canvas';
 import { Chart, registerables } from 'chart.js';
 import 'chartjs-adapter-moment';
+import { sensorData } from '../SensorData';
 import { EInkModule } from './EInkModule';
-import { sensorData } from './SensorData';
 
 export class CO2Graph extends EInkModule {
     timeRange: number; // minutes
