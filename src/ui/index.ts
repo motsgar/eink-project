@@ -1,4 +1,4 @@
-import { Canvas, createCanvas } from 'canvas';
+import { Canvas, createCanvas, Image } from 'canvas';
 import { createWriteStream } from 'fs';
 import * as fs from 'fs/promises';
 import { ditherImage } from './ditherImage';
@@ -99,13 +99,21 @@ const main = async (): Promise<void> => {
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, width, height);
     } else if (outsidePadding > 0) {
-        const imageBuffer = await fs.readFile(config.backgroundSrc);
-        const backgroundImage = await ditherImage(imageBuffer, width, height);
-        ctx.drawImage(backgroundImage, 0, 0, width, height);
+        const image = new Image();
+        image.src = await fs.readFile(config.backgroundSrc);
+        const heightRatio = image.height / height;
+        const widthRatio = image.width / width;
+        const imageWidth = image.width / Math.min(heightRatio, widthRatio);
+        const imageHeight = image.height / Math.min(heightRatio, widthRatio);
+        ctx.drawImage(image, (width - imageWidth) / 2, (height - imageHeight) / 2, imageWidth, imageHeight);
     }
     ctx.drawImage(moduleCanvas, outsidePadding, outsidePadding);
 
-    // Grayscale conversion
+    // Dither image
+    const image = await ditherImage(canvas.toBuffer());
+    ctx.drawImage(image, 0, 0);
+
+    // Grayscale conversion TODO:remove
     const imgData = ctx.getImageData(0, 0, width, height);
     const pixels = imgData.data;
     for (let i = 0; i < pixels.length; i += 4) {
