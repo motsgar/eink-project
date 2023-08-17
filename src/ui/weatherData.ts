@@ -208,14 +208,26 @@ class WeatherData {
     }
 
     private async fetchWeatherData(): Promise<void> {
+        const filename = 'weatherData.json';
         const locationId = 843429; // 843429 is the observation location id for kumpula.
-        const url = `https://m.fmi.fi/mobile/interfaces/weatherdata.php?l=en&locations=${locationId}`;
 
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error('Failed to get weather data');
+        let fileExists = false;
+        const fd = await fs.open(filename, 'wx').catch(() => {
+            fileExists = true;
+        });
+        if (!fileExists && fd) {
+            console.log(`Fetching weather data and saving it to ${filename}`);
+            const url = `https://m.fmi.fi/mobile/interfaces/weatherdata.php?l=en&locations=${locationId}`;
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Failed to get weather data');
+            }
+            await fd.write(await response.text());
+            await fd.close();
         }
-        const rawWeatherData: RawWeatherData = await response.json();
+
+        const rawWeatherData: RawWeatherData = JSON.parse((await fs.readFile(filename)).toString());
 
         this.weatherData = {
             forecasts: rawWeatherData.forecasts[0].forecast.map((forecast) => this.parseForecast(forecast)),

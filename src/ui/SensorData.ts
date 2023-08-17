@@ -19,16 +19,9 @@ class SensorData {
     constructor() {
         this.sensorHistory = [];
 
-        this.readyPromise = new Promise((resolve, reject) => {
-            this.writeFakeData()
-                .then(() => {
-                    this.readDataFromFile()
-                        .then(() => {
-                            this.sensorDataLoop().then(resolve).catch(reject);
-                        })
-                        .catch(reject);
-                })
-                .catch(reject);
+        this.readyPromise = this.writeFakeData().then(async () => {
+            await this.readDataFromFile();
+            await this.sensorDataLoop();
         });
     }
 
