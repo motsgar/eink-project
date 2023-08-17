@@ -19,10 +19,13 @@ class SensorData {
     constructor() {
         this.sensorHistory = [];
 
+        // TODO: Remove generating fake data
         this.readyPromise = this.writeFakeData().then(async () => {
             await this.readDataFromFile();
             await this.sensorDataLoop();
         });
+
+        setInterval(this.thinDataFiles, 24 * 60 * 60 * 1000);
     }
 
     private sensorDataLoop(): Promise<void> {
@@ -90,6 +93,54 @@ class SensorData {
         console.log();
     }
 
+    private async thinDataFiles(): Promise<void> {
+        const dataDir = 'sensorData';
+
+        const now = new Date();
+        const files = await fs.readdir(dataDir);
+        for (const filename of files) {
+            if (!filename.endsWith('.bin') || filename.endsWith('thin.bin')) continue;
+
+            const basename = filename.split('.')[0];
+            const date = new Date(basename);
+            if (now.getTime() - date.getTime() < 7 * 24 * 60 * 60 * 1000) continue;
+
+            console.log(`Converting ${dataDir}/${filename} to ${dataDir}/${basename}.thin.bin`);
+
+            const fileData = await fs.readFile(`${dataDir}/${filename}`);
+            let data = [];
+            for (let i = 0; i < fileData.length; i += 5 * 8) {
+                const timestamp = new Date(Number(fileData.readBigInt64LE(i)));
+                const co2 = fileData.readFloatLE(i + 8);
+                const temperature = fileData.readFloatLE(i + 16);
+                const humidity = fileData.readFloatLE(i + 24);
+                const pressure = fileData.readFloatLE(i + 32);
+                data.push({ timestamp, co2, temperature, humidity, pressure });
+            }
+            data = data.filter((sensorData) => sensorData.timestamp.getSeconds() == 0);
+
+            const buffer = Buffer.allocUnsafe(5 * 8 * data.length);
+            for (let i = 0; i < data.length; i++) {
+                const offset = i * 5 * 8;
+                buffer.writeBigInt64LE(BigInt(data[i].timestamp.getTime()), offset);
+                buffer.writeFloatLE(data[i].co2, offset + 8);
+                buffer.writeFloatLE(data[i].temperature, offset + 16);
+                buffer.writeFloatLE(data[i].humidity, offset + 24);
+                buffer.writeFloatLE(data[i].pressure, offset + 32);
+            }
+
+            await fs
+                .writeFile(`${dataDir}/${basename}.thin.bin`, buffer)
+                .then(async () => {
+                    await fs.rm(`${dataDir}/${filename}`);
+                    console.log(`Finished converting ${dataDir}/${filename} to ${dataDir}/${basename}.thin.bin`);
+                })
+                .catch((error) => {
+                    throw error;
+                });
+        }
+    }
+
     private async readDataFromFile(): Promise<void> {
         const dataDir = 'sensorData';
         await fs.mkdir(dataDir).catch(() => {}); // Create dir if it doesn't exist
@@ -130,8 +181,8 @@ class SensorData {
         this.filterSensorData();
 
         const year = data.timestamp.getUTCFullYear().toString().padStart(4, '0');
-        const month = data.timestamp.getUTCMonth().toString().padStart(2, '2');
-        const day = data.timestamp.getUTCDay().toString().padStart(2, '2');
+        const month = (data.timestamp.getUTCMonth() + 1).toString().padStart(2, '0');
+        const day = data.timestamp.getUTCDate().toString().padStart(2, '0');
         const filepath = `sensorData/${year}-${month}-${day}.bin`;
         const buffer = Buffer.allocUnsafe(5 * 8);
         buffer.writeBigInt64LE(BigInt(data.timestamp.getTime()));

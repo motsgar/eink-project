@@ -216,6 +216,7 @@ class WeatherData {
             fileExists = true;
         });
         if (!fileExists && fd) {
+            // TODO: Remove saving to file
             console.log(`Fetching weather data and saving it to ${filename}`);
             const url = `https://m.fmi.fi/mobile/interfaces/weatherdata.php?l=en&locations=${locationId}`;
 
