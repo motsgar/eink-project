@@ -5,7 +5,7 @@ import { weatherData } from '../weatherData';
 import { EInkModule, ModuleSettings } from './EInkModule';
 
 type DataType = {
-    labels: string[];
+    labels: Date[];
     tempData: number[];
     feelslikeData: number[];
     rainData: number[];
@@ -27,13 +27,13 @@ export class WeatherGraph extends EInkModule {
         const forecasts = weatherData.weatherData?.forecasts;
         if (forecasts === undefined) throw new Error("Weather data hasn't been initialized");
 
-        const labels: string[] = [];
+        const labels: Date[] = [];
         const tempData: number[] = [];
         const feelslikeData: number[] = [];
         const rainData: number[] = [];
 
         for (let i = 0; i <= this.timePeriod; i++) {
-            labels.push(forecasts[i].localtime.toISOString());
+            labels.push(forecasts[i].localtime);
             tempData.push(forecasts[i].temperature);
             feelslikeData.push(forecasts[i].feelsLike);
             rainData.push(forecasts[i].precipitation1h);
@@ -83,6 +83,7 @@ export class WeatherGraph extends EInkModule {
                         ticks: {
                             major: { enabled: true },
                             font: (context) => ({
+                                size: 16,
                                 weight: context.tick && context.tick.major ? 'bold' : '',
                             }),
                         },
@@ -90,11 +91,11 @@ export class WeatherGraph extends EInkModule {
                             color: (context) => (context.tick && context.tick.major ? '#888888' : '#eeeeee'),
                         },
                     },
-                    y: { grace: 1 },
-                    y1: { position: 'right', suggestedMax: 15 },
+                    y: { grace: 1, ticks: { font: { size: 18 } } },
+                    y1: { position: 'right', suggestedMax: 15, ticks: { font: { size: 18 } } },
                 },
                 plugins: {
-                    title: { display: true, text: 'weather' },
+                    title: { display: true, text: 'weather', font: { size: 18 } },
                     legend: { display: false },
                 },
             },

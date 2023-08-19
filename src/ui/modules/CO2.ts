@@ -22,7 +22,7 @@ export class CO2Graph extends EInkModule {
 
         const sensorData_ = sensorData.getSensorData(this.timePeriod * 60);
         const data = {
-            labels: sensorData_.map(({ timestamp }) => timestamp.toISOString()),
+            labels: sensorData_.map(({ timestamp }) => timestamp),
             datasets: [{ data: sensorData_.map(({ co2 }) => co2) }],
         };
         Chart.register(...registerables);
@@ -42,9 +42,13 @@ export class CO2Graph extends EInkModule {
                 scales: {
                     x: {
                         type: 'time',
+                        time: {
+                            unit: this.timePeriod >= 24 * 60 ? 'hour' : 'minute',
+                        },
                         ticks: {
                             major: { enabled: true },
                             font: (context) => ({
+                                size: 16,
                                 weight: context.tick && context.tick.major ? 'bold' : '',
                             }),
                         },
@@ -52,9 +56,10 @@ export class CO2Graph extends EInkModule {
                             color: (context) => (context.tick && context.tick.major ? '#888888' : '#eeeeee'),
                         },
                     },
+                    y: { ticks: { font: { size: 18 } } },
                 },
                 plugins: {
-                    title: { display: true, text: 'ppm CO2' },
+                    title: { display: true, text: 'ppm CO2', font: { size: 18 } },
                     legend: { display: false },
                 },
             },
