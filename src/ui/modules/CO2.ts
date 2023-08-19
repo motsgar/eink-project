@@ -1,5 +1,5 @@
 import { Canvas, createCanvas } from 'canvas';
-import { Chart, registerables } from 'chart.js';
+import { Chart, ScriptableScaleContext, registerables } from 'chart.js';
 import 'chartjs-adapter-moment';
 import { sensorData } from '../SensorData';
 import { EInkModule, ModuleSettings } from './EInkModule';
@@ -11,14 +11,14 @@ export class CO2Graph extends EInkModule {
         super(settings);
 
         const defaultTimePeriod = 3 * 60;
-        this.timePeriod = settings.timePeriod || defaultTimePeriod;
+        this.timePeriod = settings.timePeriod ?? defaultTimePeriod;
 
         this.readyPromise = Promise.all([sensorData.readyPromise]);
     }
 
     draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
-        const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
+        const ctx = canvas.getContext('2d');
 
         const sensorData_ = sensorData.getSensorData(this.timePeriod * 60);
         const data = {
@@ -53,7 +53,9 @@ export class CO2Graph extends EInkModule {
                             }),
                         },
                         grid: {
-                            color: (context) => (context.tick && context.tick.major ? '#888888' : '#eeeeee'),
+                            // Might not be the correct type but it works
+                            color: (context: ScriptableScaleContext) =>
+                                context.tick && context.tick.major ? '#888888' : '#eeeeee',
                         },
                     },
                     y: { ticks: { font: { size: 18 } } },

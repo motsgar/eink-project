@@ -9,7 +9,7 @@ export class HorizontalWeather extends EInkModule {
         super(settings);
 
         const defaultTimes = [0, 1, 2, 3, 5, 7, 10, 14];
-        this.times = settings.times || defaultTimes;
+        this.times = settings.times ?? defaultTimes;
 
         this.readyPromise = Promise.all([weatherData.readyPromise]);
     }

@@ -1,5 +1,5 @@
 import { Canvas, createCanvas } from 'canvas';
-import { Chart, ChartData, registerables } from 'chart.js';
+import { Chart, ChartData, ScriptableScaleContext, registerables } from 'chart.js';
 import 'chartjs-adapter-moment';
 import { weatherData } from '../weatherData';
 import { EInkModule, ModuleSettings } from './EInkModule';
@@ -18,7 +18,7 @@ export class WeatherGraph extends EInkModule {
         super(settings);
 
         const defaultTimePeriod = 24;
-        this.timePeriod = settings.timePeriod || defaultTimePeriod;
+        this.timePeriod = settings.timePeriod ?? defaultTimePeriod;
 
         this.readyPromise = Promise.all([weatherData.readyPromise]);
     }
@@ -43,7 +43,7 @@ export class WeatherGraph extends EInkModule {
 
     draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
-        const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
+        const ctx = canvas.getContext('2d');
 
         const { labels, tempData, feelslikeData, rainData } = this.getData();
 
@@ -88,7 +88,9 @@ export class WeatherGraph extends EInkModule {
                             }),
                         },
                         grid: {
-                            color: (context) => (context.tick && context.tick.major ? '#888888' : '#eeeeee'),
+                            // Might not be the correct type but it works
+                            color: (context: ScriptableScaleContext) =>
+                                context.tick && context.tick.major ? '#888888' : '#eeeeee',
                         },
                     },
                     y: { grace: 1, ticks: { font: { size: 18 } } },
