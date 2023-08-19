@@ -30,7 +30,7 @@ type View = {
     backgroundSrc: string;
     modules: Module[];
 };
-type Config = {
+export type Config = {
     views: View[];
 };
 
