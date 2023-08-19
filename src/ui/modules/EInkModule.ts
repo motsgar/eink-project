@@ -1,9 +1,12 @@
 import { Canvas, createCanvas } from 'canvas';
 
+export type ModuleSettings = { timePeriod?: number };
+
 export class EInkModule {
     readyPromise: Promise<void[]>;
 
-    constructor() {
+    constructor(settings: ModuleSettings) {
+        void settings;
         this.readyPromise = Promise.all([Promise.resolve()]);
     }
 

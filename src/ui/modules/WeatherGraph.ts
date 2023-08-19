@@ -2,7 +2,7 @@ import { Canvas, createCanvas } from 'canvas';
 import { Chart, ChartData, registerables } from 'chart.js';
 import 'chartjs-adapter-moment';
 import { weatherData } from '../weatherData';
-import { EInkModule } from './EInkModule';
+import { EInkModule, ModuleSettings } from './EInkModule';
 
 type DataType = {
     labels: string[];
@@ -12,8 +12,8 @@ type DataType = {
 };
 
 export class WeatherGraph extends EInkModule {
-    constructor() {
-        super();
+    constructor(settings: ModuleSettings) {
+        super(settings);
         this.readyPromise = Promise.all([weatherData.readyPromise]);
     }
 

@@ -1,10 +1,10 @@
 import { Canvas, createCanvas } from 'canvas';
 import { Forecast, weatherData } from '../weatherData';
-import { EInkModule } from './EInkModule';
+import { EInkModule, ModuleSettings } from './EInkModule';
 
 export class HorizontalWeather extends EInkModule {
-    constructor() {
-        super();
+    constructor(settings: ModuleSettings) {
+        super(settings);
         this.readyPromise = Promise.all([weatherData.readyPromise]);
     }
 

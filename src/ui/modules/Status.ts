@@ -1,14 +1,14 @@
 import { Canvas, Image, createCanvas, loadImage } from 'canvas';
 import { sensorData } from '../SensorData';
 import { weatherData } from '../weatherData';
-import { EInkModule } from './EInkModule';
+import { EInkModule, ModuleSettings } from './EInkModule';
 
 export class Status extends EInkModule {
     private sunriseIcon?: Image;
     private sunsetIcon?: Image;
 
-    constructor() {
-        super();
+    constructor(settings: ModuleSettings) {
+        super(settings);
         this.readyPromise = Promise.all([this.loadIcons(), weatherData.readyPromise, sensorData.readyPromise]);
     }
 

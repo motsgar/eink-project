@@ -3,3 +3,5 @@ node_modules
 dist
 sensorData
 weatherData.json
+view-*.png
+config.json
