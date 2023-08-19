@@ -54,7 +54,7 @@ export class Draw {
 
     private async loadModules(): Promise<void> {
         let i = 0;
-        this.modules = [];
+        this.modules.length = 0;
         if (this.config === undefined) {
             throw new Error('Draw.loadModules() was called before the config was loaded');
         }
@@ -87,6 +87,13 @@ export class Draw {
             }
             i += 1;
         }
+    }
+
+    async updateConfig(newConfig: Config): Promise<void> {
+        await fs.writeFile('config.json', newConfig.toString());
+        this.config = newConfig;
+        await this.loadModules();
+        await this.drawView();
     }
 
     async changeView(indexDiff: number): Promise<void> {

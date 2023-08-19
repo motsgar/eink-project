@@ -3,8 +3,14 @@ import { Forecast, weatherData } from '../weatherData';
 import { EInkModule, ModuleSettings } from './EInkModule';
 
 export class Weather extends EInkModule {
+    times: number[];
+
     constructor(settings: ModuleSettings) {
         super(settings);
+
+        const defaultTimes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        this.times = settings.times || defaultTimes;
+
         this.readyPromise = Promise.all([weatherData.readyPromise]);
     }
 
@@ -30,7 +36,6 @@ export class Weather extends EInkModule {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
 
-        const times = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         const forecasts = weatherData.weatherData?.forecasts;
         const weatherSymbols = weatherData.weatherSymbols;
         if (forecasts === undefined) throw new Error("Weather data hasn't been initialized");
@@ -39,10 +44,10 @@ export class Weather extends EInkModule {
         ctx.font = '20pt sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        const blockWidth = width / times.length;
+        const blockWidth = width / this.times.length;
 
         let maxHeight = 0;
-        for (const time of times) {
+        for (const time of this.times) {
             let yPos = 0;
 
             const hours = forecasts[time].localtime.getHours().toString();
@@ -64,25 +69,25 @@ export class Weather extends EInkModule {
 
         let xPos = 0;
         const yStart = (height - maxHeight) / 2;
-        for (const date of times) {
+        for (const time of this.times) {
             let yPos = yStart;
-            const hours = forecasts[date].localtime.getHours().toString();
+            const hours = forecasts[time].localtime.getHours().toString();
             ctx.fillText(hours, xPos + blockWidth / 2, yPos);
 
             let measureText = ctx.measureText(hours);
             yPos += measureText.actualBoundingBoxAscent + measureText.actualBoundingBoxDescent + timeSvgPadding;
 
-            const symbolId: number = forecasts[date].smartSymbol;
+            const symbolId: number = forecasts[time].smartSymbol;
             const imageSize = blockWidth;
             if (symbolId in weatherSymbols) {
                 const img = weatherSymbols[symbolId];
                 ctx.drawImage(img, xPos + (blockWidth - imageSize) / 2, yPos, imageSize, imageSize);
             } else {
-                console.error(`Failed to find weather symbol ${symbolId}`); // Find a better way to print/indicate this?
+                console.error(`Failed to find weather symbol ${symbolId}`);
             }
             yPos += imageSize + svgTextPadding;
 
-            const text = this.getText(forecasts[date]);
+            const text = this.getText(forecasts[time]);
             let i = 0;
             for (const line of text) {
                 ctx.textBaseline = 'top';

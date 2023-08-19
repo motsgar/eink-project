@@ -10,11 +10,9 @@ export class CO2Graph extends EInkModule {
     constructor(settings: ModuleSettings) {
         super(settings);
 
-        if (settings.timePeriod === undefined) {
-            throw new Error('Tried to initialize CO2Graph module without settings.timePeriod');
-        }
+        const defaultTimePeriod = 3 * 60;
+        this.timePeriod = settings.timePeriod || defaultTimePeriod;
 
-        this.timePeriod = settings.timePeriod;
         this.readyPromise = Promise.all([sensorData.readyPromise]);
     }
 

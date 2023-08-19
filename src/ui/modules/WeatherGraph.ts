@@ -12,8 +12,14 @@ type DataType = {
 };
 
 export class WeatherGraph extends EInkModule {
+    timePeriod: number;
+
     constructor(settings: ModuleSettings) {
         super(settings);
+
+        const defaultTimePeriod = 24;
+        this.timePeriod = settings.timePeriod || defaultTimePeriod;
+
         this.readyPromise = Promise.all([weatherData.readyPromise]);
     }
 
@@ -25,15 +31,16 @@ export class WeatherGraph extends EInkModule {
         const tempData: number[] = [];
         const feelslikeData: number[] = [];
         const rainData: number[] = [];
-        for (let i = 0; i <= 24; i++) {
+
+        for (let i = 0; i <= this.timePeriod; i++) {
             labels.push(forecasts[i].localtime.toISOString());
             tempData.push(forecasts[i].temperature);
             feelslikeData.push(forecasts[i].feelsLike);
-            // rainData.push(forecasts[i].precipitation1h + 3 * Math.random()); // TODO: remove random
             rainData.push(forecasts[i].precipitation1h);
         }
         return { labels, tempData, feelslikeData, rainData };
     }
+
     draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
