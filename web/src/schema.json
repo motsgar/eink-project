@@ -4,6 +4,7 @@
     "properties": {
         "views": {
             "type": "array",
+            "minLength": 1,
             "items": {
                 "type": "object",
                 "properties": {
@@ -17,6 +18,7 @@
                     "backgroundSrc": { "type": "string" },
                     "modules": {
                         "type": "array",
+                        "minLength": 1,
                         "items": {
                             "type": "object",
                             "properties": {

@@ -1,6 +1,7 @@
 import bodyParser from 'body-parser';
 import express, { Express } from 'express';
 import path from 'path';
+import { draw } from './ui/Draw';
 
 export default class HttpServer {
     private http: Express;
@@ -23,7 +24,13 @@ export default class HttpServer {
         });
         this.http.post('/update', (req, res) => {
             const updatedData = req.body;
-            console.log('Received updated data:', updatedData); // TODO: send to draw
+
+            draw.readyPromise
+                .then(() => {
+                    draw.updateConfig(updatedData).catch(console.error);
+                })
+                .catch(console.error);
+
             res.json({ message: 'Data updated successfully' });
         });
 

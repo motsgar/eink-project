@@ -61,7 +61,7 @@ export class TemperatureGraph extends EInkModule {
                     y: { ticks: { font: { size: 18 } } },
                 },
                 plugins: {
-                    title: { display: true, text: 'ppm CO2', font: { size: 18 } },
+                    title: { display: true, text: 'Temperature', font: { size: 18 } },
                     legend: { display: false },
                 },
             },

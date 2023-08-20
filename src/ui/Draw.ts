@@ -34,7 +34,7 @@ export type Config = {
     views: View[];
 };
 
-export class Draw {
+class Draw {
     private viewIndex = 0;
     private modules: EInkModule[][];
     private config?: Config;
@@ -87,12 +87,22 @@ export class Draw {
             }
             i += 1;
         }
+
+        console.log('Awaiting module readypromises');
+        for (const view of this.modules) {
+            for (const module of view) {
+                await module.readyPromise;
+            }
+        }
+        console.log('Awaiting module readypromises finished');
     }
 
     async updateConfig(newConfig: Config): Promise<void> {
-        await fs.writeFile('config.json', newConfig.toString());
+        console.log('\nRecieved new config. Resetting back to view 0');
+        await fs.writeFile('config.json', JSON.stringify(newConfig));
         this.config = newConfig;
         await this.loadModules();
+        this.viewIndex = 0;
         await this.drawView();
     }
 
@@ -130,14 +140,12 @@ export class Draw {
         for (let i = 0; i < view.modules.length; i++) {
             const module = view.modules[i];
             const moduleClass = this.modules[this.viewIndex][i];
-            console.log(`Drawing module ${moduleClass.constructor.name}`);
 
             const moduleWidth = module.width * moduleBaseWidth + moduleSpaceBetween * (module.width - 1);
             const moduleHeight = module.height * moduleBaseHeight + moduleSpaceBetween * (module.height - 1);
             const moduleBoxWidth = module.width * moduleBoxBaseWidth + moduleBoxSpaceBetween * (module.width - 1);
             const moduleBoxHeight = module.height * moduleBoxBaseHeight + moduleBoxSpaceBetween * (module.height - 1);
 
-            await moduleClass.readyPromise;
             const canvas = moduleClass.draw(moduleWidth, moduleHeight);
 
             const xStart = (width / view.width) * module.x;
@@ -175,6 +183,7 @@ export class Draw {
         if (this.config === undefined) {
             throw new Error('Tried to call drawView without waiting for config to be loaded');
         }
+        console.log(`Drawing view ${this.viewIndex}`);
 
         const view = this.config.views[this.viewIndex];
         const width = 1872; // Should probably be defined somewhere else?
@@ -229,3 +238,5 @@ export class Draw {
         });
     }
 }
+
+export const draw = new Draw();
