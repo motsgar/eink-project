@@ -1,23 +1,82 @@
+import { EventEmitter } from 'events';
+import { SerialPort } from 'serialport';
+
+const BYTESReadCO2 = [0xff, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79];
+const BYTESABCOff = [0xff, 0x01, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x86];
+
 class CO2Sensor {
     co2: number;
+    private co2SerialBuffer: number[];
+    private co2Events: EventEmitter;
+    private serialPort: SerialPort;
 
     constructor() {
         this.co2 = 600;
+        this.co2SerialBuffer = [];
+        this.co2Events = new EventEmitter({ captureRejections: true });
+        this.serialPort = new SerialPort({ path: '/dev/serial0', baudRate: 9600 });
+
+        this.sendPacket(BYTESABCOff);
+
+        this.serialPort.on('close', () => {
+            throw new Error('MH-Z19B port closed suddenly');
+        });
+        this.serialPort.on('error', (err) => {
+            throw err;
+        });
+        this.serialPort.on('data', this.handleSerialData.bind(this));
     }
 
-    getFakeData(amount: number): number[] {
-        const data = [];
-        for (let i = 0; i < amount; i++) {
-            this.co2 = this.co2 + 5.3 - 10 * Math.random();
-            data.push(this.co2);
+    private handleSerialData(data: Buffer): void {
+        this.co2SerialBuffer.push(...data);
+        if (this.co2SerialBuffer.length < 9) return;
+        if (this.co2SerialBuffer.length > 9) throw new Error('Received too much data from co2 sensor');
+
+        if (this.getChecksum(this.co2SerialBuffer) !== this.co2SerialBuffer[8]) {
+            this.co2SerialBuffer = [];
+            this.co2Events.emit('co2', 0, new Error('Bad checksum'));
+            return;
         }
-        return data;
+        const co2 = this.co2SerialBuffer[2] * 256 + this.co2SerialBuffer[3];
+        this.co2SerialBuffer = [];
+
+        this.co2Events.emit('co2', co2);
+    }
+
+    private getChecksum(packet: number[]): number {
+        let checksum = 0;
+        for (let i = 1; i < 8; i++) checksum = (checksum + packet[i]) % 256;
+        checksum = 0xff - checksum;
+        checksum += 1;
+        return checksum % 256;
+    }
+
+    private sendPacket(packet: number[]): void {
+        this.serialPort.write(packet, (err) => {
+            if (err) throw err;
+        });
     }
 
     async getData(): Promise<number> {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        this.co2 = this.co2 + 5.3 - 10 * Math.random();
-        return this.co2;
+        let errorCount = 0;
+
+        while (true) {
+            this.sendPacket(BYTESReadCO2);
+            try {
+                const co2 = await new Promise<number>((resolve, reject) => {
+                    // TODO: implement timeout
+                    this.co2Events.once('co2', (reading: number, error?: Error) => {
+                        if (error) reject(error);
+                        else resolve(reading);
+                    });
+                });
+                return co2;
+            } catch (err) {
+                console.log('error now');
+                if (errorCount > 5) throw err;
+                errorCount++;
+            }
+        }
     }
 }
 

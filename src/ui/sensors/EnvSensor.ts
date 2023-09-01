@@ -1,37 +1,48 @@
+/// <reference path="bme280.d.ts"/>
+
+import bme280 from 'bme280';
+
 type EnvData = {
     temperature: number;
     humidity: number;
     pressure: number;
 };
 
+type Sensor = {
+    read: () => Promise<{ temperature: number; humidity: number; pressure: number }>;
+};
+
 class EnvSensor {
-    data: EnvData;
+    data?: EnvData;
+    private readyPromise: Promise<void>;
+    private sensor?: Sensor;
 
     constructor() {
-        this.data = {
-            temperature: 19,
-            humidity: 50,
-            pressure: 1000,
-        };
-    }
-
-    getFakeData(amount: number): EnvData[] {
-        const data = [];
-        for (let i = 0; i < amount; i++) {
-            this.data.temperature = this.data.temperature + 0.053 - 0.1 * Math.random();
-            this.data.humidity = this.data.humidity + 0.053 - 0.1 * Math.random();
-            this.data.pressure = this.data.pressure + 0.53 - Math.random();
-            data.push({ ...this.data });
-        }
-        return data;
+        this.readyPromise = bme280
+            .open({
+                i2cAddress: 0x76,
+                humidityOversampling: bme280.OVERSAMPLE.X1,
+                pressureOversampling: bme280.OVERSAMPLE.X16,
+                temperatureOversampling: bme280.OVERSAMPLE.X2,
+                filterCoefficient: bme280.FILTER.F16,
+            })
+            .then((sensor: Sensor) => {
+                this.sensor = sensor;
+            });
     }
 
     async getData(): Promise<EnvData> {
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await this.readyPromise;
+        if (this.sensor === undefined) {
+            throw new Error('bme280 sensor is not ready even though readypromise was awaited');
+        }
+        const data = await this.sensor.read();
 
-        this.data.temperature = this.data.temperature + 0.053 - 0.1 * Math.random();
-        this.data.humidity = this.data.humidity + 0.053 - 0.1 * Math.random();
-        this.data.pressure = this.data.pressure + 0.53 - Math.random();
+        this.data = {
+            temperature: data.temperature,
+            humidity: data.humidity,
+            pressure: data.pressure,
+        };
         return this.data;
     }
 }
