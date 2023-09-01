@@ -17,14 +17,10 @@ export const ditherImage = async (inputImageBuffer: Buffer, width?: number, heig
             'center',
             '-extent',
             `${width}x${height}`,
-            '-colorspace',
-            'Gray',
             '-dither',
             'FloydSteinberg',
-            '-colors',
-            '16',
-            '-depth',
-            '4',
+            '-remap',
+            'resources/colormap.png',
             'PNG:-',
         ];
         const convertProcess = spawn('convert', args);
