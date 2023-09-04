@@ -103,7 +103,7 @@ class Draw {
         this.config = newConfig;
         await this.loadModules();
         this.viewIndex = 0;
-        await this.drawView();
+        await this.drawCurrentView();
     }
 
     async changeView(indexDiff: number): Promise<void> {
@@ -115,15 +115,15 @@ class Draw {
         this.viewIndex += indexDiff;
         while (this.viewIndex < 0) this.viewIndex += this.config.views.length;
         this.viewIndex %= this.config.views.length;
-        await this.drawView();
+        await this.drawCurrentView();
     }
 
-    private async drawModules(width: number, height: number): Promise<Canvas> {
+    private async drawModules(width: number, height: number, viewIndex: number): Promise<Canvas> {
         if (this.config === undefined) {
             throw new Error('Tried to call drawModules without waiting for config to be loaded');
         }
 
-        const view = this.config.views[this.viewIndex];
+        const view = this.config.views[viewIndex];
         const moduleCanvas = createCanvas(width, height);
         const ctx = moduleCanvas.getContext('2d');
         const outsidePadding = view.outsidePadding;
@@ -139,7 +139,7 @@ class Draw {
 
         for (let i = 0; i < view.modules.length; i++) {
             const module = view.modules[i];
-            const moduleClass = this.modules[this.viewIndex][i];
+            const moduleClass = this.modules[viewIndex][i];
 
             const moduleWidth = module.width * moduleBaseWidth + moduleSpaceBetween * (module.width - 1);
             const moduleHeight = module.height * moduleBaseHeight + moduleSpaceBetween * (module.height - 1);
@@ -179,13 +179,12 @@ class Draw {
         return moduleCanvas;
     }
 
-    async drawView(): Promise<void> {
+    async drawViewCanvas(viewIndex: number): Promise<Canvas> {
         if (this.config === undefined) {
-            throw new Error('Tried to call drawView without waiting for config to be loaded');
+            throw new Error('Tried to call drawCanvas without waiting for config to be loaded');
         }
-        console.log(`Drawing view ${this.viewIndex}`);
 
-        const view = this.config.views[this.viewIndex];
+        const view = this.config.views[viewIndex];
         const width = 1872; // Should probably be defined somewhere else?
         const height = 1404;
         const outsidePadding = view.outsidePadding;
@@ -193,7 +192,7 @@ class Draw {
         // Draw modules canvas
         const moduleCanvaswidth = width - outsidePadding * 2;
         const moduleCanvasHeight = height - outsidePadding * 2;
-        const moduleCanvas = await this.drawModules(moduleCanvaswidth, moduleCanvasHeight);
+        const moduleCanvas = await this.drawModules(moduleCanvaswidth, moduleCanvasHeight, viewIndex);
 
         // Create the full canvas
         const canvas = createCanvas(width, height);
@@ -212,18 +211,43 @@ class Draw {
         }
         ctx.drawImage(moduleCanvas, outsidePadding, outsidePadding);
 
-        // Dither image
+        // Dither canvas
         const image = await ditherImage(canvas.toBuffer());
         ctx.drawImage(image, 0, 0);
 
-        // Save the canvas as a PNG file // TODO: draw on screen instead
-        const filename = `view-${this.viewIndex}.png`;
-        const out = createWriteStream(filename);
-        const stream = canvas.createPNGStream();
-        stream.pipe(out);
-        out.on('finish', () => {
-            console.log(`Saved current view to ${filename}`);
-        });
+        return canvas;
+    }
+
+    async getAllViewsAsImages(): Promise<Buffer[]> {
+        if (this.config === undefined) {
+            throw new Error('Tried to call getAllViewsAsCanvas without waiting for config to be loaded');
+        }
+
+        const views: Buffer[] = [];
+        for (let i = 0; i < this.config.views.length; i++) {
+            const canvas = await this.drawViewCanvas(i);
+            views.push(canvas.toBuffer('image/png'));
+        }
+        return views;
+    }
+
+    async drawCurrentView(): Promise<void> {
+        console.log(`Drawing current view (index: ${this.viewIndex})`);
+        const canvas = await this.drawViewCanvas(this.viewIndex);
+
+        if (process.env.DEV === 'true') {
+            // Save the canvas as a PNG file
+            const filename = `view-${this.viewIndex}.png`;
+            const out = createWriteStream(filename);
+            const stream = canvas.createPNGStream();
+            stream.pipe(out);
+            out.on('finish', () => {
+                console.log(`Saved current view to ${filename}`);
+            });
+        } else {
+            // TODO: draw on screen
+            console.log('Missing code to draw view to screen :P');
+        }
     }
 }
 

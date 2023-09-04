@@ -5,52 +5,35 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Eink project JSON editor</title>
         <style>
-            body,
-            html {
-                margin: 0;
-                padding: 0;
-                height: 100%;
+            #image-container {
+                max-width: 100%;
+                display: flex;
+                flex-wrap: wrap; /* Allow items to wrap to the next row */
+                gap: 10px; /* Add some spacing between images (adjust as needed) */
             }
 
-            #jsoneditor-container {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-            }
-
-            button {
-                padding: 16px 32px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
-                font-size: 16px;
-                margin: 4px 2px;
-                transition-duration: 0.2s;
-                cursor: pointer;
-                border-radius: 4px;
-            }
-
-            #save-button:hover {
-                background-color: #008cba;
-                color: white;
-            }
-
-            #save-button {
-                background-color: white;
-                color: black;
-                border: 2px solid #008cba;
-                position: fixed;
-                bottom: 36px;
-                right: 10px;
+            #image-container img {
+                max-width: calc(
+                    50% - 5px
+                ); /* Set the maximum width to half of the container's width (subtract spacing) */
+                height: auto;
             }
         </style>
     </head>
 
     <body>
-        <div id="jsoneditor" style="width: 100%; height: 100%"></div>
-        <button id="save-button">Save</button>
-        <script src="bundle.js"></script>
+        <div id="image-container"></div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const imageContainer = document.getElementById('image-container');
+
+                for (let i = 0; i < 3; i++) {
+                    const image = new Image();
+                    image.src = `/images/${i}`;
+                    imageContainer.appendChild(image);
+                }
+            });
+        </script>
     </body>
 </html>
