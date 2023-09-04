@@ -216,18 +216,6 @@ class Draw {
         const image = await ditherImage(canvas.toBuffer());
         ctx.drawImage(image, 0, 0);
 
-        // Grayscale conversion TODO:remove
-        const imgData = ctx.getImageData(0, 0, width, height);
-        const pixels = imgData.data;
-        for (let i = 0; i < pixels.length; i += 4) {
-            const grayscaleValue = Math.round(pixels[i] * 0.3 + pixels[i + 1] * 0.59 + pixels[i + 2] * 0.11) >> 4;
-
-            pixels[i] = grayscaleValue | (grayscaleValue << 4);
-            pixels[i + 1] = grayscaleValue | (grayscaleValue << 4);
-            pixels[i + 2] = grayscaleValue | (grayscaleValue << 4);
-        }
-        ctx.putImageData(imgData, 0, 0);
-
         // Save the canvas as a PNG file // TODO: draw on screen instead
         const filename = `view-${this.viewIndex}.png`;
         const out = createWriteStream(filename);

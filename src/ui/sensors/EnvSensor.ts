@@ -2,7 +2,7 @@
 
 import bme280 from 'bme280';
 
-type EnvData = {
+export type EnvData = {
     temperature: number;
     humidity: number;
     pressure: number;
@@ -14,10 +14,11 @@ type Sensor = {
 
 class EnvSensor {
     data?: EnvData;
-    private readyPromise: Promise<void>;
+    private readyPromise?: Promise<void>;
     private sensor?: Sensor;
 
     constructor() {
+        if (process.env.DEV === 'true') return;
         this.readyPromise = bme280
             .open({
                 i2cAddress: 0x76,

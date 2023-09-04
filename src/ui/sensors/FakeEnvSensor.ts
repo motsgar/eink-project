@@ -36,4 +36,4 @@ class FakeEnvSensor {
     }
 }
 
-export const envSensor = new FakeEnvSensor();
+export const fakeEnvSensor = new FakeEnvSensor();

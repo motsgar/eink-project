@@ -21,4 +21,4 @@ class FakeCO2Sensor {
     }
 }
 
-export const co2Sensor = new FakeCO2Sensor();
+export const fakeCo2Sensor = new FakeCO2Sensor();

@@ -1,6 +1,8 @@
 import * as fs from 'fs/promises';
 import { co2Sensor } from './sensors/CO2Sensor';
-import { envSensor } from './sensors/EnvSensor';
+import { EnvData, envSensor } from './sensors/EnvSensor';
+import { fakeCo2Sensor } from './sensors/FakeCO2Sensor';
+import { fakeEnvSensor } from './sensors/FakeEnvSensor';
 const OFFSET = 200;
 
 export type SensorDataType = {
@@ -19,14 +21,16 @@ class SensorData {
     constructor() {
         this.sensorHistory = [];
 
-        // TODO: Remove generating fake data
-        // this.readyPromise = this.writeFakeData().then(async () => {
-        //     await this.readDataFromFile();
-        //     await this.sensorDataLoop();
-        // });
-        this.readyPromise = this.readDataFromFile().then(async () => {
-            await this.sensorDataLoop();
-        });
+        if (process.env.DEV === 'true') {
+            this.readyPromise = this.writeFakeData().then(async () => {
+                await this.readDataFromFile();
+                await this.sensorDataLoop();
+            });
+        } else {
+            this.readyPromise = this.readDataFromFile().then(async () => {
+                await this.sensorDataLoop();
+            });
+        }
 
         setInterval(this.thinDataFiles, 24 * 60 * 60 * 1000);
     }
@@ -57,44 +61,44 @@ class SensorData {
         });
     }
 
-    // private async writeFakeData(): Promise<void> {
-    //     const dataDir = 'sensorData';
-    //     let dirExists = false;
-    //     await fs.mkdir(dataDir).catch(() => {
-    //         dirExists = true;
-    //     });
-    //     if (dirExists) return;
+    private async writeFakeData(): Promise<void> {
+        const dataDir = 'sensorData';
+        let dirExists = false;
+        await fs.mkdir(dataDir).catch(() => {
+            dirExists = true;
+        });
+        if (dirExists) return;
 
-    //     console.log("\nSensorData history doesn't exist. Creating fake data...");
+        console.log("\nSensorData history doesn't exist. Creating fake data...");
 
-    //     const amount = 7 * 24 * 60 * 60;
-    //     const co2Data = co2Sensor.getFakeData(amount);
-    //     const envData = envSensor.getFakeData(amount);
-    //     const date = new Date();
-    //     const now = new Date();
-    //     date.setMilliseconds(0);
-    //     date.setSeconds(0);
-    //     date.setTime(date.getTime() - amount * 1000);
-    //     for (let i = 0; i < amount; i++) {
-    //         if (i % 100000 === 0) {
-    //             console.log(`${i}/${amount}`);
-    //         }
+        const amount = 7 * 24 * 60 * 60;
+        const co2Data = fakeCo2Sensor.getFakeData(amount);
+        const envData = fakeEnvSensor.getFakeData(amount);
+        const date = new Date();
+        const now = new Date();
+        date.setMilliseconds(0);
+        date.setSeconds(0);
+        date.setTime(date.getTime() - amount * 1000);
+        for (let i = 0; i < amount; i++) {
+            if (i % 100000 === 0) {
+                console.log(`${i}/${amount}`);
+            }
 
-    //         const timeDiff = now.getTime() - date.getTime();
-    //         if (timeDiff < 60 * 60 * 1000 || (timeDiff < 8 * 24 * 60 * 60 * 1000 && date.getSeconds() == 0)) {
-    //             const data = {
-    //                 timestamp: new Date(date.getTime()),
-    //                 co2: co2Data[i],
-    //                 ...envData[i],
-    //             };
-    //             await this.setSensorData(data);
-    //         }
+            const timeDiff = now.getTime() - date.getTime();
+            if (timeDiff < 60 * 60 * 1000 || (timeDiff < 8 * 24 * 60 * 60 * 1000 && date.getSeconds() == 0)) {
+                const data = {
+                    timestamp: new Date(date.getTime()),
+                    co2: co2Data[i],
+                    ...envData[i],
+                };
+                await this.setSensorData(data);
+            }
 
-    //         date.setTime(date.getTime() + 1000);
-    //     }
-    //     this.sensorHistory.length = 0;
-    //     console.log();
-    // }
+            date.setTime(date.getTime() + 1000);
+        }
+        this.sensorHistory.length = 0;
+        console.log();
+    }
 
     private async thinDataFiles(): Promise<void> {
         const dataDir = 'sensorData';
@@ -197,7 +201,13 @@ class SensorData {
     }
 
     private async readSensorData(timestamp: Date): Promise<void> {
-        await Promise.all([co2Sensor.getData(), envSensor.getData()])
+        let promise: Promise<[number, EnvData]>;
+        if (process.env.DEV === 'true') {
+            promise = Promise.all([fakeCo2Sensor.getData(), fakeEnvSensor.getData()]);
+        } else {
+            promise = Promise.all([co2Sensor.getData(), envSensor.getData()]);
+        }
+        await promise
             .then(async ([co2Data, envData]) => {
                 this.latestData = {
                     timestamp,

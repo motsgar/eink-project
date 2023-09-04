@@ -140,13 +140,18 @@ class WeatherData {
     constructor() {
         this.weatherSymbols = {};
 
+        const weatherDataPromise = process.env.DEV !== 'true' ? this.fetchWeatherData() : this.fetchCachedWeatherData();
         this.readyPromise = new Promise((resolve, reject) => {
-            Promise.all([this.initializeWeatherSymbols(), this.fetchWeatherData()])
+            Promise.all([this.initializeWeatherSymbols(), weatherDataPromise])
                 .then(() => {
                     resolve();
                     setInterval(
                         async () => {
-                            await this.fetchWeatherData().catch(console.error);
+                            if (process.env.DEV === 'true') {
+                                await this.fetchCachedWeatherData().catch(console.error);
+                            } else {
+                                await this.fetchWeatherData().catch(console.error);
+                            }
                         },
                         1000 * 60 * 15,
                     );
@@ -208,6 +213,21 @@ class WeatherData {
     }
 
     private async fetchWeatherData(): Promise<void> {
+        const locationId = 843429; // 843429 is the observation location id for kumpula.
+
+        const url = `https://m.fmi.fi/mobile/interfaces/weatherdata.php?l=en&locations=${locationId}`;
+        const response = await fetch(url);
+        const rawWeatherData: RawWeatherData = await response.json();
+
+        this.weatherData = {
+            forecasts: rawWeatherData.forecasts[0].forecast.map((forecast) => this.parseForecast(forecast)),
+            observation: this.parseObservation(rawWeatherData.observations[locationId][0]),
+            sunInfo: this.parseSunInfo(rawWeatherData.suninfo[locationId]),
+            warnings: rawWeatherData.warnings[locationId],
+        };
+    }
+
+    private async fetchCachedWeatherData(): Promise<void> {
         const filename = 'weatherData.json';
         const locationId = 843429; // 843429 is the observation location id for kumpula.
 
@@ -216,7 +236,6 @@ class WeatherData {
             fileExists = true;
         });
         if (!fileExists && fd) {
-            // TODO: Remove saving to file
             console.log(`Fetching weather data and saving it to ${filename}`);
             const url = `https://m.fmi.fi/mobile/interfaces/weatherdata.php?l=en&locations=${locationId}`;
 

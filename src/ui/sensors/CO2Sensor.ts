@@ -8,14 +8,16 @@ class CO2Sensor {
     co2: number;
     private co2SerialBuffer: number[];
     private co2Events: EventEmitter;
-    private serialPort: SerialPort;
+    private serialPort?: SerialPort;
 
     constructor() {
         this.co2 = 600;
         this.co2SerialBuffer = [];
         this.co2Events = new EventEmitter({ captureRejections: true });
-        this.serialPort = new SerialPort({ path: '/dev/serial0', baudRate: 9600 });
 
+        if (process.env.DEV === 'true') return;
+
+        this.serialPort = new SerialPort({ path: '/dev/serial0', baudRate: 9600 });
         this.sendPacket(BYTESABCOff);
 
         this.serialPort.on('close', () => {
@@ -52,6 +54,9 @@ class CO2Sensor {
     }
 
     private sendPacket(packet: number[]): void {
+        if (this.serialPort === undefined) {
+            throw new Error('CO2Sensor tried to send package but serialport was undefined');
+        }
         this.serialPort.write(packet, (err) => {
             if (err) throw err;
         });
