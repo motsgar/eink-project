@@ -15,7 +15,7 @@ const initialJson = {};
 editor.set(initialJson);
 
 // Get json from the server
-fetch('http://localhost:3000/data')
+fetch('/data')
     .then((res) => res.text())
     .then((text) => {
         editor.set(JSON.parse(text));
@@ -26,7 +26,7 @@ fetch('http://localhost:3000/data')
 const saveButton = document.getElementById('save-button')!;
 saveButton.addEventListener('click', () => {
     const editedData = editor.get();
-    const url = 'http://localhost:3000/update';
+    const url = '/update';
 
     const ajv = new Ajv();
     addFormats(ajv);
