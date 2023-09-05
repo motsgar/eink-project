@@ -4,13 +4,21 @@ import * as fs from 'fs/promises';
 import { ditherImage } from './ditherImage';
 import { CO2Graph } from './modules/CO2';
 import { EInkModule, ModuleSettings } from './modules/EInkModule';
+import { EnvGraph } from './modules/EnvGraph';
 import { HorizontalWeather } from './modules/HorizontalWeather';
 import { Status } from './modules/Status';
 import { TemperatureGraph } from './modules/Temperature';
 import { Weather } from './modules/Weather';
 import { WeatherGraph } from './modules/WeatherGraph';
 
-type ModuleStrings = 'CO2Graph' | 'Status' | 'TemperatureGraph' | 'Weather' | 'WeatherGraph' | 'HorizontalWeather';
+type ModuleStrings =
+    | 'CO2Graph'
+    | 'EnvGraph'
+    | 'Status'
+    | 'TemperatureGraph'
+    | 'Weather'
+    | 'WeatherGraph'
+    | 'HorizontalWeather';
 type Module = {
     module: ModuleStrings;
     x: number;
@@ -64,6 +72,9 @@ class Draw {
                 switch (module.module) {
                     case 'CO2Graph':
                         this.modules[i].push(new CO2Graph(module.settings));
+                        break;
+                    case 'EnvGraph':
+                        this.modules[i].push(new EnvGraph(module.settings));
                         break;
                     case 'HorizontalWeather':
                         this.modules[i].push(new HorizontalWeather(module.settings));

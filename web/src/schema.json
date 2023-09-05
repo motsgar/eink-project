@@ -25,6 +25,7 @@
                                 "module": {
                                     "enum": [
                                         "CO2Graph",
+                                        "EnvGraph",
                                         "Status",
                                         "TemperatureGraph",
                                         "Weather",

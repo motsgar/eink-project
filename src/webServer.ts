@@ -40,13 +40,13 @@ export default class HttpServer {
         this.http.post('/update', async (req, res) => {
             const updatedData = req.body;
 
+            res.json({ message: 'Data updated successfully' });
+
             await draw.readyPromise;
             await draw.updateConfig(updatedData);
             if (process.env.WEBIMAGES === 'true') {
                 this.images = await draw.getAllViewsAsImages();
             }
-
-            res.json({ message: 'Data updated successfully' });
         });
 
         this.http.listen(3000, () => {
@@ -60,7 +60,7 @@ export default class HttpServer {
                 })
                 .catch(console.error);
 
-            setTimeout(async () => {
+            setInterval(async () => {
                 await draw.readyPromise;
                 this.images = await draw.getAllViewsAsImages();
             }, 60 * 1000);
