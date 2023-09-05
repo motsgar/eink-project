@@ -6,12 +6,14 @@ import { EInkModule, ModuleSettings } from './EInkModule';
 
 export class TemperatureGraph extends EInkModule {
     timePeriod: number; // minutes
+    detailedSensorData: boolean;
 
     constructor(settings: ModuleSettings) {
         super(settings);
 
         const defaultTimePeriod = 3 * 60;
         this.timePeriod = settings.timePeriod ?? defaultTimePeriod;
+        this.detailedSensorData = settings.detailedSensorData ?? false;
 
         this.readyPromise = Promise.all([sensorData.readyPromise]);
     }
@@ -20,7 +22,7 @@ export class TemperatureGraph extends EInkModule {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
 
-        const sensorData_ = sensorData.getSensorData(this.timePeriod * 60);
+        const sensorData_ = sensorData.getSensorData(this.timePeriod * 60, this.detailedSensorData);
         const data = {
             labels: sensorData_.map(({ timestamp }) => timestamp),
             datasets: [{ data: sensorData_.map(({ temperature }) => temperature) }],

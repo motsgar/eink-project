@@ -41,6 +41,7 @@
                                     "type": "object",
                                     "properties": {
                                         "timePeriod": { "type": "number", "minimum": 1, "format": "int32" },
+                                        "detailedSensorData": { "type": "boolean" },
                                         "times": {
                                             "uniqueItems": true,
                                             "minItems": 1,

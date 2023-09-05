@@ -173,13 +173,13 @@ class SensorData {
         this.filterSensorData();
     }
 
-    getSensorData(timePeriod: number, onlyMinutes = true): SensorDataType[] {
+    getSensorData(timePeriod: number, getSeconds = false): SensorDataType[] {
         if (timePeriod > 7 * 24 * 60 * 60) throw new Error('Tried to get sensor data for more than 7 days'); // TODO:
 
         const date = new Date();
         return this.sensorHistory.filter((sensorData) => {
             const timeDiff = date.getTime() - sensorData.timestamp.getTime();
-            return timeDiff < timePeriod * 1000 && (!onlyMinutes || sensorData.timestamp.getSeconds() == 0);
+            return timeDiff < timePeriod * 1000 && (getSeconds || sensorData.timestamp.getSeconds() == 0);
         });
     }
 
