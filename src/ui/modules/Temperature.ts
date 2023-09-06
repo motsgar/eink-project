@@ -7,6 +7,7 @@ import { EInkModule, ModuleSettings } from './EInkModule';
 export class TemperatureGraph extends EInkModule {
     timePeriod: number; // minutes
     detailedSensorData: boolean;
+    chartInstance?: Chart;
 
     constructor(settings: ModuleSettings) {
         super(settings);
@@ -28,7 +29,11 @@ export class TemperatureGraph extends EInkModule {
             datasets: [{ data: sensorData_.map(({ temperature }) => temperature) }],
         };
         Chart.register(...registerables);
-        new Chart(ctx, {
+
+        if (this.chartInstance !== undefined) {
+            this.chartInstance.destroy();
+        }
+        this.chartInstance = new Chart(ctx, {
             type: 'line',
             data: data,
             options: {

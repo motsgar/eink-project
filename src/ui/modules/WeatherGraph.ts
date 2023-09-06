@@ -13,6 +13,7 @@ type DataType = {
 
 export class WeatherGraph extends EInkModule {
     timePeriod: number;
+    chartInstance?: Chart;
 
     constructor(settings: ModuleSettings) {
         super(settings);
@@ -64,7 +65,10 @@ export class WeatherGraph extends EInkModule {
         };
         Chart.register(...registerables);
 
-        new Chart(ctx, {
+        if (this.chartInstance !== undefined) {
+            this.chartInstance.destroy();
+        }
+        this.chartInstance = new Chart(ctx, {
             type: 'line',
             data: graphData,
             options: {

@@ -7,6 +7,7 @@ import { EInkModule, ModuleSettings } from './EInkModule';
 export class EnvGraph extends EInkModule {
     timePeriod: number; // minutes
     detailedSensorData: boolean;
+    chartInstance?: Chart;
 
     constructor(settings: ModuleSettings) {
         super(settings);
@@ -37,7 +38,11 @@ export class EnvGraph extends EInkModule {
             ],
         };
         Chart.register(...registerables);
-        new Chart(ctx, {
+
+        if (this.chartInstance !== undefined) {
+            this.chartInstance.destroy();
+        }
+        this.chartInstance = new Chart(ctx, {
             type: 'line',
             data: data,
             options: {
