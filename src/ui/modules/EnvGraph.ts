@@ -22,18 +22,27 @@ export class EnvGraph extends EInkModule {
     draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
-
         const sensorData_ = sensorData.getSensorData(this.timePeriod * 60, this.detailedSensorData);
+
+        // Cause gaps in missing data
+        for (let i = 1; i < sensorData_.length; i++) {
+            const timeDiff = sensorData_[i].timestamp.getTime() - sensorData_[i - 1].timestamp.getTime();
+            if (timeDiff > 2 * 60 * 1000) {
+                sensorData_[i].humidity = NaN;
+                sensorData_[i].pressure = NaN;
+            }
+        }
+
         const data = {
             labels: sensorData_.map(({ timestamp }) => timestamp),
             datasets: [
                 { data: sensorData_.map(({ humidity }) => humidity), label: 'Humidity' },
                 {
                     data: sensorData_.map(({ pressure }) => pressure),
-                    borderColor: '#888888',
                     order: 1,
                     yAxisID: 'y1',
                     label: 'Pressure',
+                    segment: { borderDash: [6, 6] },
                 },
             ],
         };
@@ -50,8 +59,8 @@ export class EnvGraph extends EInkModule {
                     point: { radius: 0 },
                     line: {
                         fill: false,
-                        borderColor: '#000000',
-                        borderWidth: 1,
+                        borderColor: '#333333',
+                        borderWidth: 2,
                         tension: 0.1,
                     },
                 },
@@ -59,27 +68,41 @@ export class EnvGraph extends EInkModule {
                     x: {
                         type: 'time',
                         time: {
-                            unit: this.timePeriod >= 24 * 60 ? 'hour' : 'minute',
+                            unit: this.timePeriod >= 60 ? 'hour' : 'minute',
+                            displayFormats: {
+                                hour: 'HH:mm',
+                                minute: 'HH:mm',
+                            },
                         },
                         ticks: {
                             major: { enabled: true },
                             font: (context) => ({
-                                size: 16,
+                                size: 25,
                                 weight: context.tick && context.tick.major ? 'bold' : '',
                             }),
                         },
                         grid: {
-                            // Might not be the correct type but it works
                             color: (context: ScriptableScaleContext) =>
-                                context.tick && context.tick.major ? '#888888' : '#eeeeee',
+                                (context.tick && context.tick.major) || this.timePeriod < 12 * 60
+                                    ? '#333333'
+                                    : '#ffffff00',
                         },
                     },
-                    y: { ticks: { font: { size: 18 } } },
-                    y1: { position: 'right', ticks: { font: { size: 18 } } },
+                    y: {
+                        ticks: { font: { size: 25 }, maxTicksLimit: 5 },
+                        grid: { color: '#aaaaaa' },
+                    },
+                    y1: {
+                        position: 'right',
+                        ticks: { font: { size: 25 }, maxTicksLimit: 5 },
+                        grid: {
+                            color: '#ffffff00',
+                        },
+                    },
                 },
                 plugins: {
-                    title: { display: true, text: 'ppm CO2', font: { size: 18 } },
-                    legend: { display: true },
+                    title: { display: true, text: 'Humidity & Pressure', font: { size: 25 } },
+                    legend: { display: false, labels: { font: { size: 25 } } },
                 },
             },
         });

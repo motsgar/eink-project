@@ -230,6 +230,7 @@ class Draw {
     }
 
     async getAllViewsAsImages(): Promise<Buffer[]> {
+        console.log('Generating all views as images');
         if (this.config === undefined) {
             throw new Error('Tried to call getAllViewsAsCanvas without waiting for config to be loaded');
         }
@@ -239,6 +240,7 @@ class Draw {
             const canvas = await this.drawViewCanvas(i);
             views.push(canvas.toBuffer('image/png'));
         }
+        console.log('Generating all views as images finished');
         return views;
     }
 

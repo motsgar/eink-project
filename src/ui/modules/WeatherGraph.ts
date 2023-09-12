@@ -18,7 +18,7 @@ export class WeatherGraph extends EInkModule {
     constructor(settings: ModuleSettings) {
         super(settings);
 
-        const defaultTimePeriod = 24;
+        const defaultTimePeriod = 20;
         this.timePeriod = settings.timePeriod ?? defaultTimePeriod;
 
         this.readyPromise = Promise.all([weatherData.readyPromise]);
@@ -47,12 +47,14 @@ export class WeatherGraph extends EInkModule {
         const ctx = canvas.getContext('2d');
 
         const { labels, tempData, feelslikeData, rainData } = this.getData();
-
         const graphData: ChartData = {
             labels: labels,
             datasets: [
                 { data: tempData },
-                { data: feelslikeData, borderColor: '#aaaaaa' },
+                {
+                    data: feelslikeData,
+                    segment: { borderDash: [6, 6] },
+                },
                 {
                     data: rainData,
                     type: 'bar',
@@ -76,32 +78,52 @@ export class WeatherGraph extends EInkModule {
                     point: { radius: 0 },
                     line: {
                         fill: false,
-                        borderColor: '#000000',
-                        borderWidth: 1,
+                        borderColor: '#333333',
+                        borderWidth: 2,
                         tension: 0.1,
                     },
                 },
                 scales: {
                     x: {
                         type: 'time',
+                        time: {
+                            unit: 'hour',
+                            displayFormats: {
+                                hour: 'HH',
+                                minute: 'HH',
+                                day: 'HH',
+                            },
+                        },
                         ticks: {
                             major: { enabled: true },
                             font: (context) => ({
-                                size: 16,
+                                size: 25,
                                 weight: context.tick && context.tick.major ? 'bold' : '',
                             }),
+                            // autoSkip: false,
+                            // stepSize: 2,
                         },
                         grid: {
-                            // Might not be the correct type but it works
                             color: (context: ScriptableScaleContext) =>
-                                context.tick && context.tick.major ? '#888888' : '#eeeeee',
+                                context.tick && context.tick.major ? '#333333' : '#ffffff00',
                         },
                     },
-                    y: { grace: 1, ticks: { font: { size: 18 } } },
-                    y1: { position: 'right', suggestedMax: 15, ticks: { font: { size: 18 } } },
+                    y: {
+                        grace: 1,
+                        ticks: { font: { size: 25 }, maxTicksLimit: 5 },
+                        grid: { color: '#aaaaaa' },
+                    },
+                    y1: {
+                        position: 'right',
+                        suggestedMax: 8,
+                        ticks: { font: { size: 25 }, maxTicksLimit: 5 },
+                        grid: {
+                            color: '#ffffff00',
+                        },
+                    },
                 },
                 plugins: {
-                    title: { display: true, text: 'weather', font: { size: 18 } },
+                    title: { display: true, text: 'weather', font: { size: 25 } },
                     legend: { display: false },
                 },
             },
