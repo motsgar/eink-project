@@ -1,56 +1,66 @@
-import Ajv from 'ajv';
+import Ajv, { ValidateFunction } from 'ajv';
 import addFormats from 'ajv-formats';
 import JSONEditor, { JSONEditorOptions } from 'jsoneditor';
 import 'jsoneditor/dist/img/jsoneditor-icons.svg';
 import 'jsoneditor/dist/jsoneditor.css';
 import schema from './schema.json';
 
-const container = document.getElementById('jsoneditor')!;
-const options: JSONEditorOptions = {
-    mode: 'code',
-};
-const editor = new JSONEditor(container, options);
+class JsonEditor {
+    private container: HTMLElement;
+    private editor: JSONEditor;
+    private saveButton: HTMLElement;
+    private ajv: Ajv;
+    private validate: ValidateFunction;
 
-const initialJson = {};
-editor.set(initialJson);
+    constructor() {
+        this.container = document.getElementById('jsoneditor')!;
+        const options: JSONEditorOptions = {
+            mode: 'code',
+        };
+        this.editor = new JSONEditor(this.container, options);
+        this.editor.set({});
 
-// Get json from the server
-fetch('/data')
-    .then((res) => res.text())
-    .then((text) => {
-        editor.set(JSON.parse(text));
-    })
-    .catch(console.error);
+        this.ajv = new Ajv({ allErrors: true });
+        addFormats(this.ajv);
+        this.validate = this.ajv.compile(schema);
 
-// Send JSON to the server
-const saveButton = document.getElementById('save-button')!;
-saveButton.addEventListener('click', () => {
-    const editedData = editor.get();
-    const url = '/update';
+        fetch('/data')
+            .then((res) => res.text())
+            .then((text) => {
+                this.editor.set(JSON.parse(text));
+            })
+            .catch(console.error);
 
-    const ajv = new Ajv();
-    addFormats(ajv);
-    const validate = ajv.compile(schema);
-    const isValid = validate(editedData);
-
-    if (!isValid) {
-        console.error('Invalid JSON data:', validate.errors);
-        alert('Invalid JSON data. Please correct the data before saving.');
-        return;
+        this.saveButton = document.getElementById('save-button')!;
+        this.saveButton.addEventListener('click', this.uploadJson.bind(this));
     }
 
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editedData),
-    })
-        .then((response) => response.text())
-        .then((data) => {
-            console.log('Server response:', data);
-        })
-        .catch((error) => {
-            console.error('Error:', error);
+    private async uploadJson(): Promise<void> {
+        const editedData = this.editor.get();
+        const url = '/update';
+
+        const isValid = this.validate(editedData);
+        if (!isValid) {
+            if (!this.validate.errors) {
+                alert('Invalid JSON data. Please correct the data before saving.');
+                return;
+            }
+            const errors = [];
+            for (const error of this.validate.errors) {
+                errors.push(`${error.instancePath} ${error.message}`);
+            }
+            alert(`Invalid JSON data. Please correct the data before saving.\n\n${errors.join('\n')}`);
+            return;
+        }
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(editedData),
         });
-});
+        const text = await response.json();
+        alert(text.message);
+    }
+}
+
+new JsonEditor();
