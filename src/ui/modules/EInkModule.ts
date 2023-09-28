@@ -1,6 +1,5 @@
 import { Canvas, createCanvas } from 'canvas';
-
-export type ModuleSettings = { timePeriod?: number; detailedSensorData?: boolean; times?: number[] };
+import { ModuleSettings } from '../../../web/src/schema';
 
 export class EInkModule {
     readyPromise: Promise<void[]>;

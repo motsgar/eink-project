@@ -1,16 +1,12 @@
-import Ajv, { ValidateFunction } from 'ajv';
-import addFormats from 'ajv-formats';
 import JSONEditor, { JSONEditorOptions } from 'jsoneditor';
 import 'jsoneditor/dist/img/jsoneditor-icons.svg';
 import 'jsoneditor/dist/jsoneditor.css';
-import schema from './schema.json';
+import { ConfigSchema } from './schema';
 
 class JsonEditor {
     private container: HTMLElement;
     private editor: JSONEditor;
     private saveButton: HTMLElement;
-    private ajv: Ajv;
-    private validate: ValidateFunction;
 
     constructor() {
         this.container = document.getElementById('jsoneditor')!;
@@ -19,10 +15,6 @@ class JsonEditor {
         };
         this.editor = new JSONEditor(this.container, options);
         this.editor.set({});
-
-        this.ajv = new Ajv({ allErrors: true });
-        addFormats(this.ajv);
-        this.validate = this.ajv.compile(schema);
 
         fetch('/data')
             .then((res) => res.text())
@@ -37,26 +29,18 @@ class JsonEditor {
 
     private async uploadJson(): Promise<void> {
         const editedData = this.editor.get();
-        const url = '/update';
 
-        const isValid = this.validate(editedData);
-        if (!isValid) {
-            if (!this.validate.errors) {
-                alert('Invalid JSON data. Please correct the data before saving.');
-                return;
-            }
-            const errors = [];
-            for (const error of this.validate.errors) {
-                errors.push(`${error.instancePath} ${error.message}`);
-            }
+        const result = ConfigSchema.safeParse(editedData);
+        if (!result.success) {
+            const errors = result.error.errors.map((error) => `[${error.path}]: ${error.message}`);
             alert(`Invalid JSON data. Please correct the data before saving.\n\n${errors.join('\n')}`);
             return;
         }
 
-        const response = await fetch(url, {
+        const response = await fetch('/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(editedData),
+            body: JSON.stringify(result.data),
         });
         const text = await response.json();
         alert(text.message);

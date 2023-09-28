@@ -1,8 +1,9 @@
 import { Canvas, createCanvas } from 'canvas';
 import { Chart, ChartData, ScriptableScaleContext, registerables } from 'chart.js';
 import 'chartjs-adapter-moment';
+import { ModuleSettings } from '../../../web/src/schema';
 import { weatherData } from '../weatherData';
-import { EInkModule, ModuleSettings } from './EInkModule';
+import { EInkModule } from './EInkModule';
 
 type DataType = {
     labels: Date[];

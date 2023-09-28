@@ -1,12 +1,10 @@
-import Ajv, { ValidateFunction } from 'ajv';
-import addFormats from 'ajv-formats';
 import { Canvas, createCanvas, Image } from 'canvas';
 import { createWriteStream } from 'fs';
 import * as fs from 'fs/promises';
-import schema from '../../web/src/schema.json';
+import { Config, ConfigSchema } from '../../web/src/schema';
 import { ditherImage } from './ditherImage';
 import { CO2Graph } from './modules/CO2';
-import { EInkModule, ModuleSettings } from './modules/EInkModule';
+import { EInkModule } from './modules/EInkModule';
 import { EnvGraph } from './modules/EnvGraph';
 import { HorizontalWeather } from './modules/HorizontalWeather';
 import { Status } from './modules/Status';
@@ -14,43 +12,10 @@ import { TemperatureGraph } from './modules/Temperature';
 import { Weather } from './modules/Weather';
 import { WeatherGraph } from './modules/WeatherGraph';
 
-type ModuleStrings =
-    | 'CO2Graph'
-    | 'EnvGraph'
-    | 'Status'
-    | 'TemperatureGraph'
-    | 'Weather'
-    | 'WeatherGraph'
-    | 'HorizontalWeather';
-type Module = {
-    module: ModuleStrings;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    settings: ModuleSettings;
-};
-type View = {
-    width: number;
-    height: number;
-    insidePadding: number;
-    roundness: number;
-    outsidePadding: number;
-    fillStyle: string;
-    strokeStyle: string;
-    backgroundSrc: string;
-    modules: Module[];
-};
-export type Config = {
-    views: View[];
-};
-
 class Draw {
     private viewIndex = 0;
     private modules: EInkModule[][];
     private config?: Config;
-    private ajv: Ajv;
-    private validate: ValidateFunction;
     readyPromise: Promise<void>;
 
     constructor() {
@@ -58,25 +23,14 @@ class Draw {
         this.readyPromise = this.loadConfig().then(async () => {
             await this.loadModules();
         });
-
-        this.ajv = new Ajv({ allErrors: true });
-        addFormats(this.ajv);
-        this.validate = this.ajv.compile(schema);
     }
 
     private async loadConfig(): Promise<void> {
         const dataBuffer = await fs.readFile('config.json');
         this.config = JSON.parse(dataBuffer.toString());
-        const isValid = this.validate(this.config);
-        if (!isValid) {
-            console.log();
-            if (!this.validate.errors) {
-                throw new Error('Tried to load invalid config.json.');
-            }
-            const errors = [];
-            for (const error of this.validate.errors) {
-                errors.push(`    ${error.instancePath} ${error.message}`);
-            }
+        const result = ConfigSchema.safeParse(this.config);
+        if (!result.success) {
+            const errors = result.error.errors.map((error) => `    [${error.path}]: ${error.message}`);
             throw new Error(`Tried to load invalid config.json: [\n${errors.join('\n')}\n]`);
         }
     }

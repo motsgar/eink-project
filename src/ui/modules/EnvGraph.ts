@@ -1,8 +1,9 @@
 import { Canvas, createCanvas } from 'canvas';
 import { Chart, ScriptableScaleContext, registerables } from 'chart.js';
 import 'chartjs-adapter-moment';
+import { ModuleSettings } from '../../../web/src/schema';
 import { sensorData } from '../SensorData';
-import { EInkModule, ModuleSettings } from './EInkModule';
+import { EInkModule } from './EInkModule';
 
 export class EnvGraph extends EInkModule {
     timePeriod: number; // minutes

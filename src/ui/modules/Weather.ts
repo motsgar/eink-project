@@ -1,6 +1,7 @@
 import { Canvas, createCanvas } from 'canvas';
+import { ModuleSettings } from '../../../web/src/schema';
 import { Forecast, weatherData } from '../weatherData';
-import { EInkModule, ModuleSettings } from './EInkModule';
+import { EInkModule } from './EInkModule';
 
 export class Weather extends EInkModule {
     times: number[];
