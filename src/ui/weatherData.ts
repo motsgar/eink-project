@@ -1,113 +1,8 @@
 import { Image, loadImage } from 'canvas';
 import * as fs from 'fs/promises';
-import * as moment from 'moment-timezone';
 import fetch from 'node-fetch';
-
-type WindCompass = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
-type shortTime = `${number}`;
-type longTime = `${number}T${number}`;
-type RawObservation = {
-    distance: string;
-    stationname: string;
-    localtime: shortTime;
-    Temperature: string;
-    DewPoint: string;
-    WindSpeedMS: string;
-    WindCompass8: WindCompass;
-    WindGust: string;
-    Humidity: string;
-    Pressure: string;
-    SnowDepth: string;
-    TotalCloudCover: string;
-    Visibility: string;
-    RI_10MIN: string;
-};
-
-type RawForecast = {
-    latitude: string;
-    longitude: string;
-    localtime: longTime;
-    Temperature: string;
-    SmartSymbol: string;
-    PoP: string;
-    WindSpeedMS: string;
-    WindDirection: string;
-    WindCompass8: WindCompass;
-    Precipitation1h: string;
-    FeelsLike: string;
-    dark: string;
-};
-
-type RawSunInfo = {
-    suntxt: string;
-    sunrise: longTime;
-    sunset: longTime;
-    sunrisetoday: string;
-    sunsettoday: string;
-};
-
-type RawWarnings = {
-    forestfire: boolean;
-    freeze: boolean;
-    grassfire: boolean;
-    icing: boolean;
-    heat: boolean;
-    pedestrian: boolean;
-    wind: boolean;
-    rain: boolean;
-    thunder: boolean;
-    traffic: boolean;
-    ultraviolet: boolean;
-    waterlevel: boolean;
-    waveheight: boolean;
-};
-
-type RawWeatherData = {
-    observations: { [key: number]: RawObservation[] };
-    forecasts: { forecast: RawForecast[] }[];
-    suninfo: { [key: number]: RawSunInfo };
-    warnings: { [key: number]: RawWarnings };
-};
-
-export type Observation = {
-    distance: number;
-    stationname: string;
-    localtime: Date;
-    temperature: number;
-    dewPoint: number;
-    windSpeedMS: number;
-    windCompass8: WindCompass;
-    windGust: number;
-    humidity: number;
-    pressure: number;
-    snowDepth: number;
-    totalCloudCover: number;
-    visibility: number;
-    RI_10MIN: number;
-};
-
-export type Forecast = {
-    latitude: number;
-    longitude: number;
-    localtime: Date;
-    temperature: number;
-    smartSymbol: number;
-    PoP: number;
-    windSpeedMS: number;
-    windDirection: number;
-    windCompass8: WindCompass;
-    precipitation1h: number;
-    feelsLike: number;
-    dark: boolean;
-};
-
-export type SunInfo = {
-    suntxt: string;
-    sunrise: Date;
-    sunset: Date;
-    sunrisetoday: boolean;
-    sunsettoday: boolean;
-};
+import { Forecast, Observation, parseForecastXml, parseObservationXml } from './weatherParse';
+import * as suncalc from 'suncalc';
 
 export type Warnings = {
     forestfire: boolean;
@@ -128,7 +23,7 @@ export type Warnings = {
 export type WeatherDataType = {
     observation: Observation;
     forecasts: Forecast[];
-    sunInfo: SunInfo;
+    sunInfo: suncalc.GetTimesResult;
     warnings: Warnings;
 };
 
@@ -140,15 +35,14 @@ class WeatherData {
     constructor() {
         this.weatherSymbols = {};
 
-        const weatherDataPromise = process.env.DEV !== 'true' ? this.fetchWeatherData() : this.fetchCachedWeatherData();
         this.readyPromise = new Promise((resolve, reject) => {
-            Promise.all([this.initializeWeatherSymbols(), weatherDataPromise])
+            Promise.all([this.initializeWeatherSymbols(), this.fetchWeatherData()])
                 .then(() => {
                     resolve();
                     setInterval(
                         async () => {
                             if (process.env.DEV === 'true') {
-                                await this.fetchCachedWeatherData().catch(console.error);
+                                await this.fetchWeatherData().catch(console.error);
                             } else {
                                 await this.fetchWeatherData().catch(console.error);
                             }
@@ -162,98 +56,48 @@ class WeatherData {
         });
     }
 
-    private parseShortTime(dateString: shortTime): Date {
-        return moment.tz(dateString, 'YYYYMMDDhhmm', 'Europe/Helsinki').toDate();
-    }
-    private parseLongTime(dateString: longTime): Date {
-        return moment.tz(dateString, 'YYYYMMDDThhmmdd', 'Europe/Helsinki').toDate();
-    }
-    private parseObservation(observation: RawObservation): Observation {
-        return {
-            distance: parseFloat(observation.distance),
-            stationname: observation.stationname,
-            localtime: this.parseShortTime(observation.localtime),
-            temperature: parseFloat(observation.Temperature),
-            dewPoint: parseFloat(observation.DewPoint),
-            windSpeedMS: parseFloat(observation.WindSpeedMS),
-            windCompass8: observation.WindCompass8,
-            windGust: parseFloat(observation.WindGust),
-            humidity: parseFloat(observation.Humidity),
-            pressure: parseFloat(observation.Pressure),
-            snowDepth: parseFloat(observation.SnowDepth),
-            totalCloudCover: parseFloat(observation.TotalCloudCover),
-            visibility: parseFloat(observation.Visibility),
-            RI_10MIN: parseFloat(observation.RI_10MIN),
-        };
-    }
-    private parseForecast(forecast: RawForecast): Forecast {
-        return {
-            latitude: parseFloat(forecast.latitude),
-            longitude: parseFloat(forecast.longitude),
-            localtime: this.parseLongTime(forecast.localtime),
-            temperature: parseInt(forecast.Temperature),
-            smartSymbol: parseInt(forecast.SmartSymbol),
-            PoP: parseInt(forecast.PoP),
-            windSpeedMS: parseInt(forecast.WindSpeedMS),
-            windDirection: parseInt(forecast.WindDirection),
-            windCompass8: forecast.WindCompass8,
-            precipitation1h: parseFloat(forecast.Precipitation1h),
-            feelsLike: parseInt(forecast.FeelsLike),
-            dark: forecast.dark === '1',
-        };
-    }
-    private parseSunInfo(sunInfo: RawSunInfo): SunInfo {
-        return {
-            suntxt: sunInfo.suntxt,
-            sunrise: this.parseLongTime(sunInfo.sunrise),
-            sunset: this.parseLongTime(sunInfo.sunset),
-            sunrisetoday: sunInfo.sunrisetoday === '1',
-            sunsettoday: sunInfo.sunsettoday === '1',
-        };
-    }
-
     private async fetchWeatherData(): Promise<void> {
-        const locationId = 843429; // 843429 is the observation location id for kumpula.
+        const locationId = 101004; // 101004 is the observation location id for kumpula.
 
-        const url = `https://m.fmi.fi/mobile/interfaces/weatherdata.php?l=en&locations=${locationId}`;
-        const response = await fetch(url);
-        const rawWeatherData: RawWeatherData = await response.json();
+        const forBaseQuery =
+            'https://opendata.fmi.fi/wfs?request=getFeature&storedquery_id=fmi::forecast::harmonie::surface::point::timevaluepair';
+        const forDataParams =
+            'parameters=Temperature,FeelsLike,Humidity,WindSpeedMS,WindGust,Precipitation1h,SmartSymbol,Dark';
+        const forUrl = `${forBaseQuery}&fmisid=${locationId}&${forDataParams}`;
+        const forResponse = await fetch(forUrl);
+        const forecasts = await parseForecastXml(await forResponse.text());
 
+        const obsStartTime = new Date(new Date(new Date().toUTCString()).getTime() - 15 * 60 * 1000);
+        new Date().getTimezoneOffset();
+        const obsBaseQuery =
+            'https://opendata.fmi.fi/wfs?request=getFeature&storedquery_id=fmi::observations::weather::timevaluepair';
+        const obsParams = `fmisid=${locationId}&timezone=Europe/Helsinki&starttime=${obsStartTime.toISOString()}`;
+        const obsUrl = `${obsBaseQuery}&${obsParams}`;
+        const obsResponse = await fetch(obsUrl);
+        const observation = await parseObservationXml(await obsResponse.text());
+
+        const sunInfo = suncalc.getTimes(new Date(), 60.20307, 24.96131);
+
+        // TODO: Fix fetch warnings
         this.weatherData = {
-            forecasts: rawWeatherData.forecasts[0].forecast.map((forecast) => this.parseForecast(forecast)),
-            observation: this.parseObservation(rawWeatherData.observations[locationId][0]),
-            sunInfo: this.parseSunInfo(rawWeatherData.suninfo[locationId]),
-            warnings: rawWeatherData.warnings[locationId],
-        };
-    }
-
-    private async fetchCachedWeatherData(): Promise<void> {
-        const filename = 'weatherData.json';
-        const locationId = 843429; // 843429 is the observation location id for kumpula.
-
-        let fileExists = false;
-        const fd = await fs.open(filename, 'wx').catch(() => {
-            fileExists = true;
-        });
-        if (!fileExists && fd) {
-            console.log(`Fetching weather data and saving it to ${filename}`);
-            const url = `https://m.fmi.fi/mobile/interfaces/weatherdata.php?l=en&locations=${locationId}`;
-
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error('Failed to get weather data');
-            }
-            await fd.write(await response.text());
-            await fd.close();
-        }
-
-        const rawWeatherData: RawWeatherData = JSON.parse((await fs.readFile(filename)).toString());
-
-        this.weatherData = {
-            forecasts: rawWeatherData.forecasts[0].forecast.map((forecast) => this.parseForecast(forecast)),
-            observation: this.parseObservation(rawWeatherData.observations[locationId][0]),
-            sunInfo: this.parseSunInfo(rawWeatherData.suninfo[locationId]),
-            warnings: rawWeatherData.warnings[locationId],
+            forecasts,
+            observation,
+            sunInfo,
+            warnings: {
+                forestfire: false,
+                freeze: false,
+                grassfire: false,
+                icing: false,
+                heat: false,
+                pedestrian: false,
+                wind: false,
+                rain: false,
+                thunder: false,
+                traffic: false,
+                ultraviolet: false,
+                waterlevel: false,
+                waveheight: false,
+            },
         };
     }
 

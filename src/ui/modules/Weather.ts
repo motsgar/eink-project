@@ -1,7 +1,8 @@
 import { Canvas, createCanvas } from 'canvas';
 import { ModuleSettings } from '../../../web/src/schema';
-import { Forecast, weatherData } from '../weatherData';
+import { weatherData } from '../weatherData';
 import { EInkModule } from './EInkModule';
+import { Forecast } from 'ui/weatherParse';
 
 export class Weather extends EInkModule {
     times: number[];
@@ -17,11 +18,10 @@ export class Weather extends EInkModule {
 
     private getText(forecast: Forecast): string[] {
         return [
-            `${forecast.temperature}°`,
-            `${forecast.feelsLike}°`,
-            `${forecast.windSpeedMS}`,
-            `${forecast.PoP}`,
-            `${forecast.precipitation1h}`,
+            `${Math.round(forecast.temperature)}°`,
+            `${Math.round(forecast.feelsLike)}°`,
+            `${Math.round(forecast.windSpeedMS * 10) / 10}`,
+            `${Math.round(forecast.precipitation1h * 10) / 10}`,
         ];
     }
 
@@ -89,25 +89,12 @@ export class Weather extends EInkModule {
             yPos += imageSize + svgTextPadding;
 
             const text = this.getText(forecasts[time]);
-            let i = 0;
             for (const line of text) {
                 ctx.textBaseline = 'top';
                 ctx.fillText(line, xPos + blockWidth / 2, yPos);
                 measureText = ctx.measureText(line);
 
-                // Draw small percentage sign
-                if (i === 3) {
-                    const textHeight = measureText.actualBoundingBoxAscent + measureText.actualBoundingBoxDescent;
-                    ctx.textAlign = 'left';
-                    ctx.textBaseline = 'bottom';
-                    ctx.font = '14pt sans-serif';
-                    ctx.fillText('%', xPos + blockWidth / 2 + measureText.width / 2, yPos + textHeight + 10);
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'top';
-                    ctx.font = '20pt sans-serif';
-                }
                 yPos += measureText.actualBoundingBoxAscent + measureText.actualBoundingBoxDescent + textPadding;
-                i += 1;
             }
             xPos += blockWidth;
         }

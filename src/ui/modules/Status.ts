@@ -59,8 +59,14 @@ export class Status extends EInkModule {
         ctx.font = '25pt sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
-        ctx.fillText(sunInfo.suntxt, width / 2, height - 10);
-        const textWidth = ctx.measureText(sunInfo.suntxt).width;
+        const displayTime = (date: Date): string => {
+            const offset = date.getTimezoneOffset();
+            const localTime = new Date(date.getTime() - offset * 60 * 1000);
+            return localTime.toISOString().split('T')[1].slice(0, 5);
+        };
+        const sunString = `${displayTime(sunInfo.sunrise)} - ${displayTime(sunInfo.sunset)}`;
+        ctx.fillText(sunString, width / 2, height - 10);
+        const textWidth = ctx.measureText(sunString).width;
         const iconSize = 40;
         ctx.drawImage(
             this.sunriseIcon,
@@ -98,7 +104,12 @@ export class Status extends EInkModule {
 
         ctx.textAlign = 'right';
         ctx.textBaseline = 'top';
-        text = [`${observation.temperature}°C`, `${observation.windSpeedMS} m/s`];
+        text = [
+            `${observation.temperature}°C`,
+            `${observation.windSpeedMS} m/s`,
+            `(${observation.windGust} m/s)`,
+            `${observation.precipitationIntensity} mm/h`,
+        ];
         yPos = 10;
         for (const line of text) {
             ctx.fillText(line, width - 10, yPos);

@@ -1,7 +1,8 @@
 import { Canvas, createCanvas } from 'canvas';
 import { ModuleSettings } from '../../../web/src/schema';
-import { Forecast, weatherData } from '../weatherData';
+import { weatherData } from '../weatherData';
 import { EInkModule } from './EInkModule';
+import { Forecast } from 'ui/weatherParse';
 
 export class HorizontalWeather extends EInkModule {
     times: number[];
@@ -16,7 +17,7 @@ export class HorizontalWeather extends EInkModule {
     }
 
     private getText(forecast: Forecast): string {
-        return `${forecast.temperature}°C (${forecast.feelsLike}°C)  |  ${forecast.windSpeedMS} m/s  |  ${forecast.PoP} %`;
+        return `${forecast.temperature}°C (${forecast.feelsLike}°C)  |  ${forecast.windSpeedMS} m/s`;
     }
 
     private parseTime(forecast: Forecast): string {
