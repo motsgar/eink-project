@@ -1,5 +1,6 @@
 import { ENDIANNESS, IMAGE_ROTATION, IT8951, PIXEL_PACKING, SystemInfo, WAVEFORM } from 'it8951';
 import { parentPort as _parentPort } from 'worker_threads';
+
 import { DisplayOperationError, FromWorkerMessage, ToWorkerMessage } from './displayWorkerMessageTypes';
 
 if (_parentPort === null) {
@@ -64,7 +65,9 @@ const displayArea = (x: number, y: number, width: number, height: number, mode: 
     console.error(Date.now(), 'worker display area start');
     screen.displayArea(x, y, width, height, mode);
     const now = Date.now();
-    while (now + 1000 > Date.now()) {}
+    while (now + 1000 > Date.now()) {
+        // TODO:
+    }
     console.error(Date.now(), 'worker display area end');
 };
 
@@ -98,57 +101,58 @@ const postMessage = <MessageType extends FromWorkerMessage['type']>(
     parentPort.postMessage({ ...message, type });
 };
 
-parentPort.on('message', async (msg: ToWorkerMessage) => {
-    try {
-        switch (msg.type) {
-            case 'initialize':
-                initialize();
-                if (screenInfo === undefined) {
-                    throw new Error('Should not happen');
-                }
-                postMessage('initialize', {
-                    width: screenInfo.width,
-                    height: screenInfo.height,
-                    firmware: screenInfo.firmware,
-                });
-                break;
-            case 'enable':
-                await enable();
-                postMessage('enable', {});
-                break;
-            case 'disable':
-                disable();
-                postMessage('disable', {});
-                break;
-            case 'displayArea':
-                displayArea(msg.x, msg.y, msg.width, msg.height, msg.mode);
-                postMessage('displayArea', {});
-                break;
-            case 'writePixels':
-                writePixels(msg.x, msg.y, msg.width, msg.height, msg.image, msg.bpp, msg.rotate, msg.endianism);
-                postMessage('writePixels', {});
-                break;
-            case 'screenInfo':
-                if (screenInfo === undefined) {
-                    throw new DisplayOperationError('Display not initialized');
-                }
-                postMessage('screenInfo', {
-                    width: screenInfo.width,
-                    height: screenInfo.height,
-                    firmware: screenInfo.firmware,
-                });
-                break;
-            default:
-                break;
+parentPort.on('message', (msg: ToWorkerMessage) => {
+    (async () => {
+        try {
+            switch (msg.type) {
+                case 'initialize':
+                    initialize();
+                    if (screenInfo === undefined) {
+                        throw new Error('Should not happen');
+                    }
+                    postMessage('initialize', {
+                        width: screenInfo.width,
+                        height: screenInfo.height,
+                        firmware: screenInfo.firmware,
+                    });
+                    break;
+                case 'enable':
+                    await enable();
+                    postMessage('enable', {});
+                    break;
+                case 'disable':
+                    disable();
+                    postMessage('disable', {});
+                    break;
+                case 'displayArea':
+                    displayArea(msg.x, msg.y, msg.width, msg.height, msg.mode);
+                    postMessage('displayArea', {});
+                    break;
+                case 'writePixels':
+                    writePixels(msg.x, msg.y, msg.width, msg.height, msg.image, msg.bpp, msg.rotate, msg.endianism);
+                    postMessage('writePixels', {});
+                    break;
+                case 'screenInfo':
+                    if (screenInfo === undefined) {
+                        throw new DisplayOperationError('Display not initialized');
+                    }
+                    postMessage('screenInfo', {
+                        width: screenInfo.width,
+                        height: screenInfo.height,
+                        firmware: screenInfo.firmware,
+                    });
+                    break;
+                default:
+                    break;
+            }
+        } catch (err) {
+            if (err instanceof DisplayOperationError) {
+                postMessage('error', { err });
+                return;
+            }
+            throw err;
         }
-    } catch (err) {
-        if (err instanceof DisplayOperationError) {
-            postMessage('error', { err });
-            return;
-        }
-
-        throw err;
-    }
+    })().catch(console.error);
 });
 
 parentPort.on('messageerror', (err) => {

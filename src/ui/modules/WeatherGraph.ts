@@ -1,9 +1,11 @@
+import 'chartjs-adapter-moment';
+
 import { Canvas, createCanvas } from 'canvas';
 import { Chart, ChartData, ScriptableScaleContext, registerables } from 'chart.js';
-import 'chartjs-adapter-moment';
+
+import { EInkModule } from './EInkModule';
 import { ModuleSettings } from '../../../web/src/schema';
 import { weatherData } from '../weatherData';
-import { EInkModule } from './EInkModule';
 
 type DataType = {
     labels: Date[];
@@ -99,14 +101,13 @@ export class WeatherGraph extends EInkModule {
                             major: { enabled: true },
                             font: (context) => ({
                                 size: 25,
-                                weight: context.tick && context.tick.major ? 'bold' : '',
+                                weight: context.tick.major ? 'bold' : 'normal',
                             }),
                             // autoSkip: false,
                             // stepSize: 2,
                         },
                         grid: {
-                            color: (context: ScriptableScaleContext) =>
-                                context.tick && context.tick.major ? '#333333' : '#ffffff00',
+                            color: (context: ScriptableScaleContext) => (context.tick.major ? '#333333' : '#ffffff00'),
                         },
                     },
                     y: {

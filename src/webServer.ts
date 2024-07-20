@@ -1,7 +1,9 @@
 import bodyParser from 'body-parser';
 import express, { Express } from 'express';
 import path from 'path';
+
 import { draw } from './ui/Draw';
+import { ConfigSchema } from '../web/src/schema';
 
 export default class HttpServer {
     private http: Express;
@@ -28,7 +30,7 @@ export default class HttpServer {
         this.http.get('/data', (req, res) => {
             res.sendFile(path.join(__dirname, '../', 'config.json'));
         });
-        this.http.get('/images/:id', async (req, res) => {
+        this.http.get('/images/:id', (req, res) => {
             const id = parseInt(req.params.id);
             if (id < 0 || id >= this.images.length) {
                 res.status(404).send('Image not found');
@@ -37,8 +39,15 @@ export default class HttpServer {
                 res.send(this.images[id]);
             }
         });
+
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.http.post('/update', async (req, res) => {
-            const updatedData = req.body;
+            const result = ConfigSchema.safeParse(req.body);
+            if (!result.success) {
+                console.error(result.error);
+                return res.status(400).json(result.error);
+            }
+            const updatedData = result.data;
 
             res.json({ message: 'Data updated successfully' });
 
@@ -60,9 +69,11 @@ export default class HttpServer {
                 })
                 .catch(console.error);
 
-            setInterval(async () => {
-                await draw.readyPromise;
-                this.images = await draw.getAllViewsAsImages();
+            setInterval(() => {
+                (async () => {
+                    await draw.readyPromise;
+                    this.images = await draw.getAllViewsAsImages();
+                })().catch(console.error);
             }, 60 * 1000);
         }
     }

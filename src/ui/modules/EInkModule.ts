@@ -1,4 +1,5 @@
 import { Canvas, createCanvas } from 'canvas';
+
 import { ModuleSettings } from '../../../web/src/schema';
 
 export class EInkModule {

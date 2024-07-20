@@ -1,8 +1,9 @@
 import { Canvas, Image, createCanvas, loadImage } from 'canvas';
+
+import { EInkModule } from './EInkModule';
 import { ModuleSettings } from '../../../web/src/schema';
 import { sensorData } from '../SensorData';
 import { weatherData } from '../weatherData';
-import { EInkModule } from './EInkModule';
 
 export class Status extends EInkModule {
     private sunriseIcon?: Image;

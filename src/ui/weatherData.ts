@@ -1,8 +1,9 @@
 import { Image, loadImage } from 'canvas';
 import * as fs from 'fs/promises';
 import fetch from 'node-fetch';
+import suncalc from 'suncalc';
+
 import { Forecast, Observation, parseForecastXml, parseObservationXml } from './weatherParse';
-import * as suncalc from 'suncalc';
 
 export type Warnings = {
     forestfire: boolean;
@@ -40,12 +41,9 @@ class WeatherData {
                 .then(() => {
                     resolve();
                     setInterval(
-                        async () => {
-                            if (process.env.DEV === 'true') {
-                                await this.fetchWeatherData().catch(console.error);
-                            } else {
-                                await this.fetchWeatherData().catch(console.error);
-                            }
+                        () => {
+                            if (process.env.DEV === 'true') this.fetchWeatherData().catch(console.error);
+                            else this.fetchWeatherData().catch(console.error);
                         },
                         1000 * 60 * 15,
                     );

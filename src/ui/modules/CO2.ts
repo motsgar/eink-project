@@ -1,9 +1,11 @@
+import 'chartjs-adapter-moment';
+
 import { Canvas, createCanvas } from 'canvas';
 import { Chart, ScriptableScaleContext, registerables } from 'chart.js';
-import 'chartjs-adapter-moment';
+
+import { EInkModule } from './EInkModule';
 import { ModuleSettings } from '../../../web/src/schema';
 import { sensorData } from '../SensorData';
-import { EInkModule } from './EInkModule';
 
 export class CO2Graph extends EInkModule {
     timePeriod: number; // minutes
@@ -68,14 +70,12 @@ export class CO2Graph extends EInkModule {
                             major: { enabled: true },
                             font: {
                                 size: 25,
-                                weight: (context) => (context.tick && context.tick.major ? 'bold' : ''),
+                                weight: (context) => (context.tick.major ? 'bold' : 'normal'),
                             },
                         },
                         grid: {
                             color: (context: ScriptableScaleContext) =>
-                                (context.tick && context.tick.major) || this.timePeriod < 12 * 60
-                                    ? '#333333'
-                                    : '#ffffff00',
+                                context.tick.major || this.timePeriod < 12 * 60 ? '#333333' : '#ffffff00',
                         },
                     },
                     y: {

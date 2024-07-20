@@ -65,6 +65,7 @@ class CO2Sensor {
     async getData(): Promise<number> {
         let errorCount = 0;
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         while (true) {
             this.sendPacket(BYTESReadCO2);
             try {

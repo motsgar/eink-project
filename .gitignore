@@ -6,3 +6,4 @@ sensorData
 weatherData.json
 view-*.png
 config.json
+.vscode

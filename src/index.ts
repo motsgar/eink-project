@@ -1,7 +1,8 @@
 import { createCanvas } from 'canvas';
-import 'dotenv/config';
+
 import { cleanup, drawCanvas, initialize } from './display';
 
+import 'dotenv/config';
 const canvas = createCanvas(1000, 800);
 const ctx = canvas.getContext('2d');
 
@@ -25,6 +26,7 @@ const shutdown = async (): Promise<void> => {
 
 initialize()
     .then(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         while (true) {
             await drawCanvas(200, 200, canvas).catch((err) => {
                 console.error(err);
@@ -43,7 +45,15 @@ initialize()
         console.error(err);
     });
 
-process.on('SIGINT', shutdown);
-process.on('SIGUSR1', shutdown);
-process.on('SIGUSR2', shutdown);
-process.on('uncaughtException', shutdown);
+process.on('SIGINT', () => {
+    shutdown().catch(console.error);
+});
+process.on('SIGUSR1', () => {
+    shutdown().catch(console.error);
+});
+process.on('SIGUSR2', () => {
+    shutdown().catch(console.error);
+});
+process.on('uncaughtException', () => {
+    shutdown().catch(console.error);
+});

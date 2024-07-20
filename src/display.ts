@@ -3,6 +3,7 @@ import { EventEmitter, once } from 'events';
 import { ENDIANNESS, IMAGE_ROTATION, PIXEL_PACKING, WAVEFORM } from 'it8951';
 import * as path from 'path';
 import { Worker } from 'worker_threads';
+
 import {
     DisplayOperationError,
     FromWorkerMessage,
@@ -10,7 +11,7 @@ import {
     ToWorkerMessage,
 } from './displayWorkerMessageTypes';
 
-const worker = new Worker(path.resolve(__dirname, 'displayWorker.js'));
+const worker = new Worker(path.resolve(import.meta.url, 'displayWorker.js'));
 
 let cleanupRunning = false;
 let turnRunning = false;
@@ -21,9 +22,10 @@ const turnWrapper = <ReturnType, Args extends unknown[]>(
 ): ((...args: Args) => Promise<ReturnType>) => {
     return async (...args) => {
         if (turnRunning) {
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             while (true) {
                 await once(nextTurnEvent, 'next');
-                if (!turnRunning) break;
+                if (!turnRunning) break; // eslint-disable-line @typescript-eslint/no-unnecessary-condition
             }
         }
         turnRunning = true;
@@ -36,12 +38,10 @@ const turnWrapper = <ReturnType, Args extends unknown[]>(
     };
 };
 
-type ResponseForMessageType<MessageType extends ToWorkerMessage['type']> = Extract<
-    FromWorkerMessage,
-    { type: MessageType }
-> extends never
-    ? void
-    : Omit<Extract<FromWorkerMessage, { type: MessageType }>, 'type'>;
+type ResponseForMessageType<MessageType extends ToWorkerMessage['type']> =
+    Extract<FromWorkerMessage, { type: MessageType }> extends never
+        ? void
+        : Omit<Extract<FromWorkerMessage, { type: MessageType }>, 'type'>;
 
 const postMessage = <MessageType extends ToWorkerMessage['type']>(
     messageType: MessageType,

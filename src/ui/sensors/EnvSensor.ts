@@ -1,5 +1,3 @@
-/// <reference path="bme280.d.ts"/>
-
 import bme280 from 'bme280';
 
 export type EnvData = {

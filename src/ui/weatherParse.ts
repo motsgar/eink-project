@@ -1,5 +1,6 @@
 import { parseString } from 'xml2js';
 
+import { forecastXmlSchema, observationXmlSchema } from './weatherSchema';
 export type Forecast = {
     localtime: Date;
     temperature: number;
@@ -27,16 +28,18 @@ const initForecast: Forecast = {
 
 export const parseForecastXml = (xml: string): Promise<Forecast[]> =>
     new Promise((resolve, reject) =>
-        parseString(xml, (err, result) => {
+        parseString(xml, (err, rawResult) => {
             if (err) {
                 reject(err);
             } else {
+                const forecastResult = forecastXmlSchema.parse(rawResult);
+
                 const forecastMap: ForecastRecord = {};
-                const members = result['wfs:FeatureCollection']['wfs:member'];
+                const members = forecastResult['wfs:FeatureCollection']['wfs:member'];
                 for (const member of members) {
                     const dataPoints =
                         member['omso:PointTimeSeriesObservation'][0]['om:result'][0]['wml2:MeasurementTimeseries'][0];
-                    const dataType = dataPoints['$']['gml:id'];
+                    const dataType = dataPoints.$['gml:id'];
 
                     let key: keyof Forecast | 'invalid' = 'invalid';
                     switch (dataType) {
@@ -64,20 +67,20 @@ export const parseForecastXml = (xml: string): Promise<Forecast[]> =>
                         case 'mts-1-1-Dark':
                             key = 'dark';
                             break;
+                        default:
+                            break;
                     }
                     if (key === 'invalid') continue;
 
                     for (const point of dataPoints['wml2:point']) {
-                        const date = new Date(point['wml2:MeasurementTVP'][0]['wml2:time'][0]);
+                        const date = point['wml2:MeasurementTVP'][0]['wml2:time'][0];
                         const stringVal = point['wml2:MeasurementTVP'][0]['wml2:value'][0];
                         if (date.getTime() < new Date().getTime()) continue;
 
                         const dateKey = date.toISOString();
                         if (!(dateKey in forecastMap)) {
-                            forecastMap[dateKey] = JSON.parse(JSON.stringify(initForecast));
-                            forecastMap[dateKey].localtime = new Date(
-                                date.getTime() - date.getTimezoneOffset() * 60 * 1000,
-                            );
+                            forecastMap[dateKey] = structuredClone(initForecast);
+                            forecastMap[dateKey].localtime = date;
                         }
                         if (key === 'dark') forecastMap[dateKey][key] = Boolean(stringVal);
                         else forecastMap[dateKey][key] = parseFloat(stringVal);
@@ -86,7 +89,7 @@ export const parseForecastXml = (xml: string): Promise<Forecast[]> =>
 
                 const forecastData = Object.entries(forecastMap);
                 forecastData.sort();
-                resolve(forecastData.map(([_, forecast]) => forecast)); // eslint-disable-line @typescript-eslint/no-unused-vars
+                resolve(forecastData.map(([, forecast]) => forecast));
             }
         }),
     );
@@ -114,18 +117,20 @@ const initObservation: Observation = {
 
 export const parseObservationXml = (xml: string): Promise<Observation> =>
     new Promise((resolve, reject) =>
-        parseString(xml, (err, result) => {
+        parseString(xml, (err, rawResult) => {
             if (err) {
                 reject(err);
             } else {
-                const observation: Observation = JSON.parse(JSON.stringify(initObservation));
+                const observationResult = observationXmlSchema.parse(rawResult);
+
+                const observation: Observation = structuredClone(initObservation);
                 observation.localtime = new Date(1970, 0, 1);
 
-                const members = result['wfs:FeatureCollection']['wfs:member'];
+                const members = observationResult['wfs:FeatureCollection']['wfs:member'];
                 for (const member of members) {
                     const dataPoints =
                         member['omso:PointTimeSeriesObservation'][0]['om:result'][0]['wml2:MeasurementTimeseries'][0];
-                    const dataType = dataPoints['$']['gml:id'];
+                    const dataType = dataPoints.$['gml:id'];
 
                     let key: keyof Observation | 'invalid' = 'invalid';
                     switch (dataType) {
@@ -151,6 +156,8 @@ export const parseObservationXml = (xml: string): Promise<Observation> =>
                         case 'obs-obs-1-1-p_sea':
                             key = 'pressure';
                             break;
+                        default:
+                            break;
                     }
                     if (key === 'invalid') continue;
 
@@ -163,7 +170,7 @@ export const parseObservationXml = (xml: string): Promise<Observation> =>
                     }
                 }
 
-                resolve(observation); // eslint-disable-line @typescript-eslint/no-unused-vars
+                resolve(observation);
             }
         }),
     );

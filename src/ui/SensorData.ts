@@ -1,8 +1,10 @@
 import * as fs from 'fs/promises';
+
 import { co2Sensor } from './sensors/CO2Sensor';
 import { EnvData, envSensor } from './sensors/EnvSensor';
 import { fakeCo2Sensor } from './sensors/FakeCO2Sensor';
 import { fakeEnvSensor } from './sensors/FakeEnvSensor';
+
 const OFFSET = 200;
 
 export type SensorDataType = {
@@ -32,7 +34,12 @@ class SensorData {
             });
         }
 
-        setInterval(this.thinDataFiles, 24 * 60 * 60 * 1000);
+        setInterval(
+            () => {
+                this.thinDataFiles().catch(console.error);
+            },
+            24 * 60 * 60 * 1000,
+        );
     }
 
     private sensorDataLoop(): Promise<void> {
@@ -42,10 +49,12 @@ class SensorData {
         return new Promise((resolve) => {
             let timeoutTime = 1000 - milliseconds - OFFSET;
             if (timeoutTime < 0) timeoutTime += 1000;
-            setTimeout(async () => {
-                await this.readSensorData(nextDate);
-                resolve();
-                void this.sensorDataLoop();
+            setTimeout(() => {
+                (async () => {
+                    await this.readSensorData(nextDate);
+                    resolve();
+                    void this.sensorDataLoop();
+                })().catch(console.error);
             }, timeoutTime);
         });
     }
@@ -56,18 +65,21 @@ class SensorData {
             const timeDiff = date.getTime() - sensorData.timestamp.getTime();
             return (
                 timeDiff < 60 * 60 * 1000 ||
-                (timeDiff < 8 * 24 * 60 * 60 * 1000 && sensorData.timestamp.getSeconds() == 0)
+                (timeDiff < 8 * 24 * 60 * 60 * 1000 && sensorData.timestamp.getSeconds() === 0)
             );
         });
     }
 
     private async writeFakeData(): Promise<void> {
         const dataDir = 'sensorData';
-        let dirExists = false;
-        await fs.mkdir(dataDir).catch(() => {
-            dirExists = true;
-        });
-        if (dirExists) return;
+        try {
+            await fs.mkdir(dataDir);
+        } catch (e) {
+            if (e instanceof Error && 'code' in e && e.code === 'EEXIST') {
+                return;
+            }
+            throw e;
+        }
 
         console.log("\nSensorData history doesn't exist. Creating fake data...");
 
@@ -85,7 +97,7 @@ class SensorData {
             }
 
             const timeDiff = now.getTime() - date.getTime();
-            if (timeDiff < 60 * 60 * 1000 || (timeDiff < 8 * 24 * 60 * 60 * 1000 && date.getSeconds() == 0)) {
+            if (timeDiff < 60 * 60 * 1000 || (timeDiff < 8 * 24 * 60 * 60 * 1000 && date.getSeconds() === 0)) {
                 const data = {
                     timestamp: new Date(date.getTime()),
                     co2: co2Data[i],
@@ -124,7 +136,7 @@ class SensorData {
                 const pressure = fileData.readFloatLE(i + 32);
                 data.push({ timestamp, co2, temperature, humidity, pressure });
             }
-            data = data.filter((sensorData) => sensorData.timestamp.getSeconds() == 0);
+            data = data.filter((sensorData) => sensorData.timestamp.getSeconds() === 0);
 
             const buffer = Buffer.allocUnsafe(5 * 8 * data.length);
             for (let i = 0; i < data.length; i++) {
@@ -179,7 +191,7 @@ class SensorData {
         const date = new Date();
         return this.sensorHistory.filter((sensorData) => {
             const timeDiff = date.getTime() - sensorData.timestamp.getTime();
-            return timeDiff < timePeriod * 1000 && (getSeconds || sensorData.timestamp.getSeconds() == 0);
+            return timeDiff < timePeriod * 1000 && (getSeconds || sensorData.timestamp.getSeconds() === 0);
         });
     }
 

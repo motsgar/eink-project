@@ -1,7 +1,7 @@
 import { Canvas, createCanvas, Image } from 'canvas';
 import { createWriteStream } from 'fs';
 import * as fs from 'fs/promises';
-import { Config, ConfigSchema } from '../../web/src/schema';
+
 import { ditherImage } from './ditherImage';
 import { CO2Graph } from './modules/CO2';
 import { EInkModule } from './modules/EInkModule';
@@ -11,6 +11,7 @@ import { Status } from './modules/Status';
 import { TemperatureGraph } from './modules/Temperature';
 import { Weather } from './modules/Weather';
 import { WeatherGraph } from './modules/WeatherGraph';
+import { Config, ConfigSchema } from '../../web/src/schema';
 
 class Draw {
     private viewIndex = 0;
@@ -27,12 +28,12 @@ class Draw {
 
     private async loadConfig(): Promise<void> {
         const dataBuffer = await fs.readFile('config.json');
-        this.config = JSON.parse(dataBuffer.toString());
-        const result = ConfigSchema.safeParse(this.config);
+        const result = ConfigSchema.safeParse(JSON.parse(dataBuffer.toString()));
         if (!result.success) {
-            const errors = result.error.errors.map((error) => `    [${error.path}]: ${error.message}`);
+            const errors = result.error.errors.map((error) => `    [${error.path.join('/')}]: ${error.message}`);
             throw new Error(`Tried to load invalid config.json: [\n${errors.join('\n')}\n]`);
         }
+        this.config = result.data;
     }
 
     private async loadModules(): Promise<void> {
@@ -66,8 +67,6 @@ class Draw {
                     case 'WeatherGraph':
                         this.modules[i].push(new WeatherGraph(module.settings));
                         break;
-                    default:
-                        throw new Error(`Unknown module ${module.module}`);
                 }
                 this.modules[i].push();
             }
@@ -104,7 +103,7 @@ class Draw {
         await this.drawCurrentView();
     }
 
-    private async drawModules(width: number, height: number, viewIndex: number): Promise<Canvas> {
+    private drawModules(width: number, height: number, viewIndex: number): Canvas {
         if (this.config === undefined) {
             throw new Error('Tried to call drawModules without waiting for config to be loaded');
         }
@@ -178,7 +177,7 @@ class Draw {
         // Draw modules canvas
         const moduleCanvaswidth = width - outsidePadding * 2;
         const moduleCanvasHeight = height - outsidePadding * 2;
-        const moduleCanvas = await this.drawModules(moduleCanvaswidth, moduleCanvasHeight, viewIndex);
+        const moduleCanvas = this.drawModules(moduleCanvaswidth, moduleCanvasHeight, viewIndex);
 
         // Create the full canvas
         const canvas = createCanvas(width, height);
