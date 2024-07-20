@@ -13,20 +13,9 @@ export default class HttpServer {
         this.images = [];
 
         this.http = express();
-        this.http.use(express.static('webdist'));
-        this.http.use(
-            bodyParser.urlencoded({
-                extended: true,
-            }),
-        );
+        this.http.use(bodyParser.urlencoded({ extended: true }));
         this.http.use(bodyParser.json());
 
-        this.http.get('/config', (req, res) => {
-            res.sendFile('config.html', { root: 'webdist' });
-        });
-        this.http.get('/', (req, res) => {
-            res.sendFile('index.html', { root: 'webdist' });
-        });
         this.http.get('/data', (req, res) => {
             res.sendFile(path.join(__dirname, '../', 'config.json'));
         });

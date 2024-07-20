@@ -99,15 +99,16 @@ export class WeatherGraph extends EInkModule {
                         },
                         ticks: {
                             major: { enabled: true },
-                            font: (context) => ({
+                            font: (context: ScriptableScaleContext | { tick: undefined }) => ({
                                 size: 25,
-                                weight: context.tick.major ? 'bold' : 'normal',
+                                weight: context.tick && context.tick.major ? 'bold' : 'normal',
                             }),
                             // autoSkip: false,
                             // stepSize: 2,
                         },
                         grid: {
-                            color: (context: ScriptableScaleContext) => (context.tick.major ? '#333333' : '#ffffff00'),
+                            color: (context: ScriptableScaleContext | { tick: undefined }) =>
+                                context.tick && context.tick.major ? '#333333' : '#ffffff00',
                         },
                     },
                     y: {
