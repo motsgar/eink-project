@@ -2,6 +2,7 @@ import { Canvas } from 'canvas';
 import { EventEmitter, once } from 'events';
 import { ENDIANNESS, IMAGE_ROTATION, PIXEL_PACKING, WAVEFORM } from 'it8951';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { Worker } from 'worker_threads';
 
 import {
@@ -11,7 +12,8 @@ import {
     ToWorkerMessage,
 } from './displayWorkerMessageTypes';
 
-const worker = new Worker(path.resolve(import.meta.url, 'displayWorker.js'));
+const workerPath = path.dirname(fileURLToPath(import.meta.url));
+const worker = new Worker(path.resolve(workerPath, 'displayWorker.js'));
 
 let cleanupRunning = false;
 let turnRunning = false;

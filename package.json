@@ -12,10 +12,10 @@
         "dev:vite": "vite web",
         "dev:tsx": "tsx src/index.ts",
         "dev:tsxui": "tsx src/ui/index.ts",
-        "start": "node --enable-source-maps dist/index.js",
+        "start": "node --enable-source-maps dist/index.mjs",
         "build": "npm run build:esbuild && npm run build:vite",
         "build:vite": "vite build web",
-        "build:esbuild": "tsc && node ./esbuild.js",
+        "build:esbuild": "tsc && node .esbuild.mjs",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives"
     },
     "author": "",

@@ -50,15 +50,4 @@ module.exports = {
             },
         ],
     },
-    // settings: {
-    //     'import/parsers': {
-    //         '@typescript-eslint/parser': ['.ts', '.tsx'],
-    //     },
-    //     'import/resolver': {
-    //         node: {
-    //             extensions: ['.js', '.ts'],
-    //             moduleDirectory: ['node_modules', 'src/'],
-    //         },
-    //     },
-    // },
 };

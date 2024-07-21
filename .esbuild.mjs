@@ -9,4 +9,5 @@ build({
     format: 'esm',
     sourcemap: true,
     packages: 'external',
+    outExtension: { '.js': '.mjs' },
 }).catch(() => process.exit(1));
