@@ -6,8 +6,7 @@ build({
     minify: true,
     bundle: true,
     platform: 'node',
-    format: 'esm',
+    format: 'cjs',
     sourcemap: true,
     packages: 'external',
-    outExtension: { '.js': '.mjs' },
 }).catch(() => process.exit(1));

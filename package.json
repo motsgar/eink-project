@@ -12,7 +12,7 @@
         "dev:vite": "vite web",
         "dev:tsx": "tsx src/index.ts",
         "dev:tsxui": "tsx src/ui/index.ts",
-        "start": "node --enable-source-maps dist/index.mjs",
+        "start": "node --enable-source-maps dist/index.js",
         "build": "npm run build:esbuild && npm run build:vite",
         "build:vite": "vite build web",
         "build:esbuild": "tsc && node .esbuild.mjs",
