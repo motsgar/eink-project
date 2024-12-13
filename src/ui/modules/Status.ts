@@ -1,7 +1,7 @@
-import { Canvas, Image, createCanvas, loadImage } from 'canvas';
+import { type Canvas, type Image, createCanvas, loadImage } from 'canvas';
 
 import { EInkModule } from './EInkModule';
-import { ModuleSettings } from '../../../web/src/schema';
+import type { ModuleSettings } from '../../../web/src/schema';
 import { sensorData } from '../SensorData';
 import { weatherData } from '../weatherData';
 
@@ -43,7 +43,7 @@ export class Status extends EInkModule {
         ctx.textBaseline = 'top';
         ctx.fillStyle = 'black';
         let yPos = height / 2 - 150;
-        const timeText = new Date().toTimeString().substring(0, 5);
+        const timeText = new Date().toTimeString().slice(0, 5);
         ctx.fillText(timeText, width / 2, yPos);
         const timeMeasureText = ctx.measureText(timeText);
         yPos += timeMeasureText.actualBoundingBoxAscent + timeMeasureText.actualBoundingBoxDescent + 60;

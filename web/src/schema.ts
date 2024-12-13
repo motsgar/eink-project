@@ -33,12 +33,12 @@ const viewSchema = z.object({
     outsidePadding: z.number().min(0),
     fillStyle: z
         .string()
-        .regex(/^#[0-9a-fA-F]+$/)
+        .regex(/^#[0-9a-fA-F]+$/u)
         .min(7)
         .max(9),
     strokeStyle: z
         .string()
-        .regex(/^#[0-9a-fA-F]+$/)
+        .regex(/^#[0-9a-fA-F]+$/u)
         .min(7)
         .max(9),
     backgroundSrc: z.string(),

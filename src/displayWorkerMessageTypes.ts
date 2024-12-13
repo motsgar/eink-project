@@ -1,4 +1,4 @@
-import { ENDIANNESS, IMAGE_ROTATION, PIXEL_PACKING, WAVEFORM } from 'it8951';
+import type { ENDIANNESS, IMAGE_ROTATION, PIXEL_PACKING, WAVEFORM } from 'it8951';
 
 export class DisplayOperationError extends Error {
     constructor(message: string) {

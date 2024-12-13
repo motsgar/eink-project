@@ -1,6 +1,6 @@
-import JSONEditor, { JSONEditorOptions } from 'jsoneditor';
-import { JSX, useEffect, useState } from 'react';
-import { RouterProvider, Outlet, createBrowserRouter } from 'react-router-dom';
+import JSONEditor, { type JSONEditorOptions } from 'jsoneditor';
+import { type JSX, useEffect, useState } from 'react';
+import { Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { z } from 'zod';
 
 import 'jsoneditor/dist/img/jsoneditor-icons.svg';
@@ -24,6 +24,7 @@ const Home = (): JSX.Element => {
         >
             {images.map((src) => (
                 <img
+                    key={src}
                     src={src}
                     style={{
                         maxWidth: 'calc(50% - 5px)',
@@ -42,12 +43,12 @@ const Config = (): JSX.Element => {
     const [editor, setEditor] = useState<JSONEditor | null>(null);
 
     useEffect(() => {
-        const container = document.getElementById('jsoneditor')!;
+        const container = document.querySelector('#jsoneditor')!;
         const newEditor = new JSONEditor(container, editorOptions);
         newEditor.set({});
 
         fetch('/api/data')
-            .then((res) => res.text())
+            .then(async (res) => res.text())
             .then((text) => {
                 newEditor.set(JSON.parse(text));
                 setEditor(newEditor);
@@ -77,8 +78,9 @@ const Config = (): JSX.Element => {
     };
     return (
         <>
-            <div id="jsoneditor" style={{ height: '90vh' }}></div>
+            <div id="jsoneditor" style={{ height: '90vh' }} />
             <button
+                type="button"
                 onClick={() => {
                     uploadJson().catch(console.error);
                 }}

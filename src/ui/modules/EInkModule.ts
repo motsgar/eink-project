@@ -1,6 +1,6 @@
-import { Canvas, createCanvas } from 'canvas';
+import { type Canvas, createCanvas } from 'canvas';
 
-import { ModuleSettings } from '../../../web/src/schema';
+import type { ModuleSettings } from '../../../web/src/schema';
 
 export class EInkModule {
     readyPromise: Promise<void[]>;

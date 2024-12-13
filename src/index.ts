@@ -3,6 +3,7 @@ import { createCanvas } from 'canvas';
 import { cleanup, drawCanvas, initialize } from './display';
 
 import 'dotenv/config';
+
 const canvas = createCanvas(1000, 800);
 const ctx = canvas.getContext('2d');
 
@@ -28,8 +29,8 @@ initialize()
     .then(async () => {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         while (true) {
-            await drawCanvas(200, 200, canvas).catch((err) => {
-                console.error(err);
+            await drawCanvas(200, 200, canvas).catch((error) => {
+                console.error(error);
             });
             console.log('draw done');
             number++;
@@ -40,9 +41,9 @@ initialize()
             await new Promise((resolve) => setTimeout(resolve, 1000));
         }
     })
-    .catch((err) => {
+    .catch((error) => {
         console.error('failed to initialize display');
-        console.error(err);
+        console.error(error);
     });
 
 process.on('SIGINT', () => {

@@ -1,6 +1,6 @@
 import bodyParser from 'body-parser';
-import express, { Express } from 'express';
-import path from 'path';
+import express, { type Express } from 'express';
+import path from 'node:path';
 
 import { draw } from './ui/Draw';
 import { ConfigSchema } from '../web/src/schema';

@@ -1,7 +1,7 @@
-import { ENDIANNESS, IMAGE_ROTATION, IT8951, PIXEL_PACKING, SystemInfo, WAVEFORM } from 'it8951';
-import { parentPort as _parentPort } from 'worker_threads';
+import { ENDIANNESS, IMAGE_ROTATION, IT8951, type PIXEL_PACKING, type SystemInfo, WAVEFORM } from 'it8951';
+import { parentPort as _parentPort } from 'node:worker_threads';
 
-import { DisplayOperationError, FromWorkerMessage, ToWorkerMessage } from './displayWorkerMessageTypes';
+import { DisplayOperationError, type FromWorkerMessage, type ToWorkerMessage } from './displayWorkerMessageTypes';
 
 if (_parentPort === null) {
     throw new Error('Display worker must be run as a worker thread');
@@ -145,12 +145,12 @@ parentPort.on('message', (msg: ToWorkerMessage) => {
                 default:
                     break;
             }
-        } catch (err) {
-            if (err instanceof DisplayOperationError) {
-                postMessage('error', { err });
+        } catch (error) {
+            if (error instanceof DisplayOperationError) {
+                postMessage('error', { err: error });
                 return;
             }
-            throw err;
+            throw error;
         }
     })().catch(console.error);
 });

@@ -1,9 +1,9 @@
-import { Canvas, createCanvas } from 'canvas';
+import { type Canvas, createCanvas } from 'canvas';
 
 import { EInkModule } from './EInkModule';
-import { ModuleSettings } from '../../../web/src/schema';
+import type { ModuleSettings } from '../../../web/src/schema';
 import { weatherData } from '../weatherData';
-import { Forecast } from '../weatherParse';
+import type { Forecast } from '../weatherParse';
 
 export class HorizontalWeather extends EInkModule {
     times: number[];

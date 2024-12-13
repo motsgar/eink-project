@@ -1,7 +1,7 @@
-import * as fs from 'fs/promises';
+import * as fs from 'node:fs/promises';
 
 import { co2Sensor } from './sensors/CO2Sensor';
-import { EnvData, envSensor } from './sensors/EnvSensor';
+import { envSensor } from './sensors/EnvSensor';
 import { fakeCo2Sensor } from './sensors/FakeCO2Sensor';
 import { fakeEnvSensor } from './sensors/FakeEnvSensor';
 
@@ -42,7 +42,7 @@ class SensorData {
         );
     }
 
-    private sensorDataLoop(): Promise<void> {
+    private async sensorDataLoop(): Promise<void> {
         const nextDate = new Date();
         const milliseconds = nextDate.getMilliseconds();
         nextDate.setMilliseconds(1000);
@@ -74,11 +74,11 @@ class SensorData {
         const dataDir = 'sensorData';
         try {
             await fs.mkdir(dataDir);
-        } catch (e) {
-            if (e instanceof Error && 'code' in e && e.code === 'EEXIST') {
+        } catch (error) {
+            if (error instanceof Error && 'code' in error && error.code === 'EEXIST') {
                 return;
             }
-            throw e;
+            throw error;
         }
 
         console.log("\nSensorData history doesn't exist. Creating fake data...");
@@ -92,7 +92,7 @@ class SensorData {
         date.setSeconds(0);
         date.setTime(date.getTime() - amount * 1000);
         for (let i = 0; i < amount; i++) {
-            if (i % 100000 === 0) {
+            if (i % 100_000 === 0) {
                 console.log(`${i}/${amount}`);
             }
 
@@ -139,13 +139,13 @@ class SensorData {
             data = data.filter((sensorData) => sensorData.timestamp.getSeconds() === 0);
 
             const buffer = Buffer.allocUnsafe(5 * 8 * data.length);
-            for (let i = 0; i < data.length; i++) {
+            for (const [i, datum] of data.entries()) {
                 const offset = i * 5 * 8;
-                buffer.writeBigInt64LE(BigInt(data[i].timestamp.getTime()), offset);
-                buffer.writeFloatLE(data[i].co2, offset + 8);
-                buffer.writeFloatLE(data[i].temperature, offset + 16);
-                buffer.writeFloatLE(data[i].humidity, offset + 24);
-                buffer.writeFloatLE(data[i].pressure, offset + 32);
+                buffer.writeBigInt64LE(BigInt(datum.timestamp.getTime()), offset);
+                buffer.writeFloatLE(datum.co2, offset + 8);
+                buffer.writeFloatLE(datum.temperature, offset + 16);
+                buffer.writeFloatLE(datum.humidity, offset + 24);
+                buffer.writeFloatLE(datum.pressure, offset + 32);
             }
 
             await fs
@@ -213,12 +213,10 @@ class SensorData {
     }
 
     private async readSensorData(timestamp: Date): Promise<void> {
-        let promise: Promise<[number, EnvData]>;
-        if (process.env.DEV === 'true') {
-            promise = Promise.all([fakeCo2Sensor.getData(), fakeEnvSensor.getData()]);
-        } else {
-            promise = Promise.all([co2Sensor.getData(), envSensor.getData()]);
-        }
+        const promise =
+            process.env.DEV === 'true'
+                ? Promise.all([fakeCo2Sensor.getData(), fakeEnvSensor.getData()])
+                : Promise.all([co2Sensor.getData(), envSensor.getData()]);
         await promise
             .then(async ([co2Data, envData]) => {
                 this.latestData = {

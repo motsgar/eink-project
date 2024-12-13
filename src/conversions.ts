@@ -1,4 +1,4 @@
-import { Canvas } from 'canvas';
+import type { Canvas } from 'canvas';
 
 const convertTo4BPP = (image: Canvas): Buffer => {
     const buffer = Buffer.alloc((image.width * image.height) >> 1);

@@ -1,15 +1,15 @@
-import { Canvas } from 'canvas';
-import { EventEmitter, once } from 'events';
+import type { Canvas } from 'canvas';
 import { ENDIANNESS, IMAGE_ROTATION, PIXEL_PACKING, WAVEFORM } from 'it8951';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-import { Worker } from 'worker_threads';
+import { EventEmitter, once } from 'node:events';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { Worker } from 'node:worker_threads';
 
 import {
     DisplayOperationError,
-    FromWorkerMessage,
-    ScreenInfoProps,
-    ToWorkerMessage,
+    type FromWorkerMessage,
+    type ScreenInfoProps,
+    type ToWorkerMessage,
 } from './displayWorkerMessageTypes';
 
 const workerPath = path.dirname(fileURLToPath(import.meta.url));
@@ -45,7 +45,7 @@ type ResponseForMessageType<MessageType extends ToWorkerMessage['type']> =
         ? void
         : Omit<Extract<FromWorkerMessage, { type: MessageType }>, 'type'>;
 
-const postMessage = <MessageType extends ToWorkerMessage['type']>(
+const postMessage = async <MessageType extends ToWorkerMessage['type']>(
     messageType: MessageType,
     message: Omit<Extract<ToWorkerMessage, { type: MessageType }>, 'type'>,
 ): Promise<ResponseForMessageType<MessageType>> => {

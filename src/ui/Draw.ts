@@ -1,17 +1,17 @@
-import { Canvas, createCanvas, Image } from 'canvas';
-import { createWriteStream } from 'fs';
-import * as fs from 'fs/promises';
+import { type Canvas, Image, createCanvas } from 'canvas';
+import { createWriteStream } from 'node:fs';
+import * as fs from 'node:fs/promises';
 
 import { ditherImage } from './ditherImage';
 import { CO2Graph } from './modules/CO2';
-import { EInkModule } from './modules/EInkModule';
+import type { EInkModule } from './modules/EInkModule';
 import { EnvGraph } from './modules/EnvGraph';
 import { HorizontalWeather } from './modules/HorizontalWeather';
 import { Status } from './modules/Status';
 import { TemperatureGraph } from './modules/Temperature';
 import { Weather } from './modules/Weather';
 import { WeatherGraph } from './modules/WeatherGraph';
-import { Config, ConfigSchema } from '../../web/src/schema';
+import { type Config, ConfigSchema } from '../../web/src/schema';
 
 class Draw {
     private viewIndex = 0;

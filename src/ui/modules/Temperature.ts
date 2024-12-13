@@ -1,10 +1,10 @@
 import 'chartjs-adapter-moment';
 
-import { Canvas, createCanvas } from 'canvas';
-import { Chart, ScriptableScaleContext, registerables } from 'chart.js';
+import { type Canvas, createCanvas } from 'canvas';
+import { Chart, type ScriptableScaleContext, registerables } from 'chart.js';
 
 import { EInkModule } from './EInkModule';
-import { ModuleSettings } from '../../../web/src/schema';
+import type { ModuleSettings } from '../../../web/src/schema';
 import { sensorData } from '../SensorData';
 
 export class TemperatureGraph extends EInkModule {
@@ -72,12 +72,12 @@ export class TemperatureGraph extends EInkModule {
                             font: {
                                 size: 25,
                                 weight: (context: ScriptableScaleContext | { tick: undefined }) =>
-                                    context.tick && context.tick.major ? 'bold' : 'normal',
+                                    context.tick?.major ? 'bold' : 'normal',
                             },
                         },
                         grid: {
                             color: (context: ScriptableScaleContext | { tick: undefined }) =>
-                                (context.tick && context.tick.major) || this.timePeriod < 12 * 60
+                                (context.tick?.major) || this.timePeriod < 12 * 60
                                     ? '#333333'
                                     : '#ffffff00',
                         },

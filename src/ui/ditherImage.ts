@@ -1,5 +1,5 @@
 import { Image } from 'canvas';
-import { spawn } from 'child_process';
+import { spawn } from 'node:child_process';
 
 export const ditherImage = async (inputImageBuffer: Buffer, width?: number, height?: number): Promise<Image> => {
     return new Promise((resolve, reject) => {

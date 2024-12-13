@@ -1,6 +1,7 @@
 import { parseString } from 'xml2js';
 
 import { forecastXmlSchema, observationXmlSchema } from './weatherSchema';
+
 export type Forecast = {
     localtime: Date;
     temperature: number;
@@ -26,7 +27,7 @@ const initForecast: Forecast = {
     dark: false,
 };
 
-export const parseForecastXml = (xml: string): Promise<Forecast[]> =>
+export const parseForecastXml = async (xml: string): Promise<Forecast[]> =>
     new Promise((resolve, reject) =>
         parseString(xml, (err, rawResult) => {
             if (err) {
@@ -75,7 +76,7 @@ export const parseForecastXml = (xml: string): Promise<Forecast[]> =>
                     for (const point of dataPoints['wml2:point']) {
                         const date = point['wml2:MeasurementTVP'][0]['wml2:time'][0];
                         const stringVal = point['wml2:MeasurementTVP'][0]['wml2:value'][0];
-                        if (date.getTime() < new Date().getTime()) continue;
+                        if (date.getTime() < Date.now()) continue;
 
                         const dateKey = date.toISOString();
                         if (!(dateKey in forecastMap)) {
@@ -115,7 +116,7 @@ const initObservation: Observation = {
     pressure: 0,
 };
 
-export const parseObservationXml = (xml: string): Promise<Observation> =>
+export const parseObservationXml = async (xml: string): Promise<Observation> =>
     new Promise((resolve, reject) =>
         parseString(xml, (err, rawResult) => {
             if (err) {

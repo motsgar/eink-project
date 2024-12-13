@@ -1,9 +1,8 @@
-import { Image, loadImage } from 'canvas';
-import * as fs from 'fs/promises';
-import fetch from 'node-fetch';
+import { type Image, loadImage } from 'canvas';
+import * as fs from 'node:fs/promises';
 import suncalc from 'suncalc';
 
-import { Forecast, Observation, parseForecastXml, parseObservationXml } from './weatherParse';
+import { type Forecast, type Observation, parseForecastXml, parseObservationXml } from './weatherParse';
 
 export type Warnings = {
     forestfire: boolean;
@@ -48,14 +47,12 @@ class WeatherData {
                         1000 * 60 * 15,
                     );
                 })
-                .catch((error) => {
-                    reject(error);
-                });
+                .catch((error) => reject(error as Error));
         });
     }
 
     private async fetchWeatherData(): Promise<void> {
-        const locationId = 101004; // 101004 is the observation location id for kumpula.
+        const locationId = 101_004; // 101004 is the observation location id for kumpula.
 
         const forBaseQuery =
             'https://opendata.fmi.fi/wfs?request=getFeature&storedquery_id=fmi::forecast::harmonie::surface::point::timevaluepair';
@@ -74,7 +71,7 @@ class WeatherData {
         const obsResponse = await fetch(obsUrl);
         const observation = await parseObservationXml(await obsResponse.text());
 
-        const sunInfo = suncalc.getTimes(new Date(), 60.20307, 24.96131);
+        const sunInfo = suncalc.getTimes(new Date(), 60.203_07, 24.961_31);
 
         // TODO: Fix fetch warnings
         this.weatherData = {
