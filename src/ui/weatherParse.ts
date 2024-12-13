@@ -134,6 +134,8 @@ export const parseObservationXml = async (xml: string): Promise<Observation> =>
                     const dataType = dataPoints.$['gml:id'];
 
                     let key: keyof Observation | 'invalid' = 'invalid';
+                    // The rule should allow fallback to default?
+                    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
                     switch (dataType) {
                         case 'obs-obs-1-1-t2m':
                             key = 'temperature';

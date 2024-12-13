@@ -33,7 +33,7 @@ class EnvSensor {
     async getData(): Promise<EnvData> {
         await this.readyPromise;
         if (this.sensor === undefined) {
-            throw new Error('bme280 sensor is not ready even though readypromise was awaited');
+            throw new Error('bme280 sensor is not ready even though readyPromise was awaited');
         }
         const data = await this.sensor.read();
 

@@ -73,17 +73,17 @@ class Draw {
             i += 1;
         }
 
-        console.log('Awaiting module readypromises');
+        console.log('Awaiting module readyPromises');
         for (const view of this.modules) {
             for (const module of view) {
                 await module.readyPromise;
             }
         }
-        console.log('Awaiting module readypromises finished');
+        console.log('Awaiting module readyPromises finished');
     }
 
     async updateConfig(newConfig: Config): Promise<void> {
-        console.log('\nRecieved new config. Resetting back to view 0');
+        console.log('\nReceived new config. Resetting back to view 0');
         await fs.writeFile('config.json', JSON.stringify(newConfig));
         this.config = newConfig;
         await this.loadModules();
@@ -175,9 +175,9 @@ class Draw {
         const outsidePadding = view.outsidePadding;
 
         // Draw modules canvas
-        const moduleCanvaswidth = width - outsidePadding * 2;
+        const moduleCanvasWidth = width - outsidePadding * 2;
         const moduleCanvasHeight = height - outsidePadding * 2;
-        const moduleCanvas = this.drawModules(moduleCanvaswidth, moduleCanvasHeight, viewIndex);
+        const moduleCanvas = this.drawModules(moduleCanvasWidth, moduleCanvasHeight, viewIndex);
 
         // Create the full canvas
         const canvas = createCanvas(width, height);

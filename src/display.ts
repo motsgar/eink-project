@@ -60,7 +60,7 @@ const postMessage = async <MessageType extends ToWorkerMessage['type']>(
             if (response.type !== messageType) {
                 reject(
                     new DisplayOperationError(
-                        `Recieved other response type than expected (${messageType}): ${response.type}`,
+                        `Received other response type than expected (${messageType}): ${response.type}`,
                     ),
                 );
                 return;

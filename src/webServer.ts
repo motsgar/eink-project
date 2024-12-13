@@ -5,6 +5,8 @@ import path from 'node:path';
 import { draw } from './ui/Draw';
 import { ConfigSchema } from '../web/src/schema';
 
+/* eslint-disable @typescript-eslint/no-misused-promises */
+
 export default class HttpServer {
     private http: Express;
     private images: Buffer[];
@@ -29,12 +31,12 @@ export default class HttpServer {
             }
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.http.post('/update', async (req, res) => {
             const result = ConfigSchema.safeParse(req.body);
             if (!result.success) {
                 console.error(result.error);
-                return res.status(400).json(result.error);
+                res.status(400).json(result.error);
+                return;
             }
             const updatedData = result.data;
 
