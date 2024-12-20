@@ -17,16 +17,13 @@ RUN apt-get install -y gcc-13 g++-13
 
 COPY appimage-linuxdeploy.sh appimage-linuxdeploy.sh
 COPY linuxdeploy-plugin-checkrt.patch linuxdeploy-plugin-checkrt.patch
+RUN chmod +x appimage-linuxdeploy.sh
 RUN ./appimage-linuxdeploy.sh
 RUN rm appimage-linuxdeploy.sh linuxdeploy-plugin-checkrt.patch
 
 ENV LDAI_RUNTIME_FILE="/opt/linuxdeploy/type2-runtime"
 ENV PATH="$PATH:/opt/linuxdeploy/"
 ENV CXX="g++-13"
-
-COPY dependencies.sh dependencies.sh
-RUN ./dependencies.sh
-RUN rm dependencies.sh
 
 # Create home directory for node stuff really doesn't like running without one
 RUN mkdir -p /home/builder/
