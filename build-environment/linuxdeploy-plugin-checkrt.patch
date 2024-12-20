@@ -1,0 +1,73 @@
+--- linuxdeploy-plugin-checkrt.sh	2023-12-10 19:00:01.000000000 +0200
++++ linuxdeploy-plugin-checkrt.sh	2024-08-12 04:46:21.727795257 +0300
+@@ -400,7 +400,7 @@
+ 
+     cat > COPYING << \__EOF__
+ checkrt.c: 2022-2023 <djcj@gmx.de>
+-exec.c: 2018 Pablo Marcos Oltra <pablo.marcos.oltra@gmail.com>
++checkrt-exec.c: 2018 Pablo Marcos Oltra <pablo.marcos.oltra@gmail.com>
+ 
+ The MIT License
+ 
+@@ -1233,7 +1233,7 @@
+ 
+ __EOF__
+ 
+-    cat > exec.c << \__EOF__
++    cat > checkrt-exec.c << \__EOF__
+ /* Copyright (c) 2018 Pablo Marcos Oltra <pablo.marcos.oltra@gmail.com>
+  *
+  * Permission is hereby granted, free of charge, to any person obtaining a copy
+@@ -1255,14 +1255,14 @@
+  * SOFTWARE.
+  */
+ /*
+- * This exec.so library is intended to restore the environment of the AppImage's
++ * This checkrt-exec.so library is intended to restore the environment of the AppImage's
+  * parent process. This is done to avoid library clashing of bundled libraries
+  * with external processes, e.g when running the web browser.
+  *
+  * The intended usage is as follows:
+  *
+  * 1. This library is injected to the dynamic loader through LD_PRELOAD
+- *    automatically in AppRun **only** if `exec.so` exists.
++ *    automatically in AppRun **only** if `checkrt-exec.so` exists.
+  *
+  * 2. This library will intercept calls to new processes and will detect whether
+  *    those calls are for binaries within the AppImage bundle or external ones.
+@@ -1510,7 +1510,7 @@
+ fi
+ 
+ if [ -x "$APPDIR/checkrt/checkrt" ]; then
+-    CHECKRT_LIBS="$($APPDIR/checkrt/checkrt)"
++    CHECKRT_LIBS="$("$APPDIR/checkrt/checkrt")"
+ 
+     # prepend to LD_LIBRARY_PATH
+     if [ -n "$CHECKRT_LIBS" ]; then
+@@ -1518,9 +1518,10 @@
+     fi
+ fi
+ 
+-# check for exec.so
+-if [ -f "$APPDIR/checkrt/exec.so" ]; then
+-    export LD_PRELOAD="$APPDIR/checkrt/exec.so:${LD_PRELOAD}"
++# check for checkrt-exec.so
++if [ -f "$APPDIR/checkrt/checkrt-exec.so" ]; then
++    export LD_LIBRARY_PATH="$APPDIR/checkrt:${LD_LIBRARY_PATH}"
++    export LD_PRELOAD="checkrt-exec.so:${LD_PRELOAD}"
+ fi
+ 
+ # debugging
+@@ -1540,9 +1541,9 @@
+ echo "Compiling checkrt"
+ cc -O2 checkrt.c -o checkrt $LDFLAGS
+ 
+-echo "Compiling exec.so"
+-cc -shared -O2 -fPIC exec.c -o exec.so $LDFLAGS
+-rm checkrt.c exec.c
++echo "Compiling checkrt-exec.so"
++cc -shared -O2 -fPIC checkrt-exec.c -o checkrt-exec.so $LDFLAGS
++rm checkrt.c checkrt-exec.c
+ 
+ ./checkrt --copy
+ 

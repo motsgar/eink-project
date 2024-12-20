@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=E-ink software
+Exec=node
+Icon=eink
+Type=Application
+Terminal=true
+Categories=Utility;

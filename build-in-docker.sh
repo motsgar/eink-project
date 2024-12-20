@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+set -e
+
+pushd build-environment
+docker build -t builder .
+popd
+
+INPUT_FILES=(
+    "appimageBuild"
+    "appimageResources"
+    "resources"
+    "src"
+    "web"
+    ".nvmrc"
+    "esbuild.mjs"
+    "package.json"
+    "tsconfig.json"
+    "yarn.lock"
+)
+OUTPUT_FILES=("eink.AppImage" "AppDir")
+DOCKER_DIR="/app"
+
+echo "Cleaning output files"
+for FILE in "${OUTPUT_FILES[@]}"; do
+    rm -rf "$FILE"
+done
+
+CONTAINER_NAME="builder-temp-$(date +%s)"
+
+docker create --name "$CONTAINER_NAME" builder ./appimageBuild/all.sh
+
+echo "Copying input files to docker container"
+for FILE in "${INPUT_FILES[@]}"; do
+    docker cp "$FILE" "$CONTAINER_NAME:$DOCKER_DIR/"
+done
+
+echo "Starting container and running build script"
+docker ps -a
+docker start -ai "$CONTAINER_NAME"
+
+echo "Copying output files back to host"
+for FILE in "${OUTPUT_FILES[@]}"; do
+    docker cp "$CONTAINER_NAME:$DOCKER_DIR/$FILE" .
+done
+
+docker rm "$CONTAINER_NAME"
+
+echo "Successfully built AppImage to ./eink.AppImage"
