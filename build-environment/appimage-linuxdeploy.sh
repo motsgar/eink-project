@@ -12,6 +12,8 @@ patch < linuxdeploy-plugin-checkrt.patch
 chmod +x linuxdeploy.AppImage
 chmod +x linuxdeploy-plugin-checkrt.sh
 
+# Fix the AI\x02 magic bytes in the AppImage that prevent it from being ran inside qemu
+sed -i 's|AI\x02|\x00\x00\x00|' linuxdeploy.AppImage
 ./linuxdeploy.AppImage --appimage-extract
 rm linuxdeploy.AppImage
 
