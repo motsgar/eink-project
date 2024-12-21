@@ -12,9 +12,14 @@ patch < linuxdeploy-plugin-checkrt.patch
 chmod +x linuxdeploy.AppImage
 chmod +x linuxdeploy-plugin-checkrt.sh
 
-# Fix the AI\x02 magic bytes in the AppImage that prevent it from being ran inside qemu
-sed -i 's|AI\x02|\x00\x00\x00|' linuxdeploy.AppImage
 ./linuxdeploy.AppImage --appimage-extract
+if [ "$ARCH" == "aarch64" ]; then
+    apt-get install -y qemu-user-static binfmt-support
+    update-binfmts --enable qemu-aarch64
+    qemu-aarch64-static ./linuxdeploy.AppImage --appimage-extract
+else
+    ./linuxdeploy.AppImage --appimage-extract
+fi
 rm linuxdeploy.AppImage
 
 mv squashfs-root /opt/linuxdeploy
