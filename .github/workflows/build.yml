@@ -17,12 +17,12 @@ jobs:
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: arm64
+          platforms: aarch64
 
       - name: Build build container
         run: |
           docker buildx create --use
-          docker buildx build --platform linux/arm64 \
+          docker buildx build --platform linux/aarch64 \
             -t local-build-container:latest \
             ./build-environment --load
 
@@ -30,7 +30,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: local-build-container:latest
-          options: --rm -v ${{ github.workspace }}:/app -w /app
+          options: --rm -v ${{ github.workspace }}:/app -w /app --platform linux/aarch64
           run: |
             appimageBuild/all.sh
 
