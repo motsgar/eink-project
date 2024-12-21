@@ -12,12 +12,13 @@ patch < linuxdeploy-plugin-checkrt.patch
 chmod +x linuxdeploy.AppImage
 chmod +x linuxdeploy-plugin-checkrt.sh
 
-./linuxdeploy.AppImage --appimage-extract
 if [ "$ARCH" == "aarch64" ]; then
+    echo "Installing qemu-user-static for aarch64"
     apt-get install -y qemu-user-static binfmt-support
     update-binfmts --enable qemu-aarch64
     qemu-aarch64-static ./linuxdeploy.AppImage --appimage-extract
 else
+    echo "using native architecture"
     ./linuxdeploy.AppImage --appimage-extract
 fi
 rm linuxdeploy.AppImage
