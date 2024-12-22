@@ -2,8 +2,10 @@
 
 set -e
 
+IMAGE_NAME="temp-builder-image-$(date +%s)"
+
 pushd build-environment
-docker build -t builder .
+docker buildx build --platform=linux/aarch64 -t "$IMAGE_NAME":latest . --load
 popd
 
 INPUT_FILES=(
@@ -26,9 +28,9 @@ for FILE in "${OUTPUT_FILES[@]}"; do
     rm -rf "$FILE"
 done
 
-CONTAINER_NAME="builder-temp-$(date +%s)"
+CONTAINER_NAME="temp-builder-container-$(date +%s)"
 
-docker create --name "$CONTAINER_NAME" builder ./appimageBuild/all.sh
+docker create --name "$CONTAINER_NAME" --platform=linux/aarch64 "$IMAGE_NAME" ./appimageBuild/all.sh
 
 echo "Copying input files to docker container"
 for FILE in "${INPUT_FILES[@]}"; do
@@ -36,7 +38,6 @@ for FILE in "${INPUT_FILES[@]}"; do
 done
 
 echo "Starting container and running build script"
-docker ps -a
 docker start -ai "$CONTAINER_NAME"
 
 echo "Copying output files back to host"
