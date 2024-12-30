@@ -12,6 +12,7 @@ import { TemperatureGraph } from './modules/Temperature';
 import { Weather } from './modules/Weather';
 import { WeatherGraph } from './modules/WeatherGraph';
 import { type Config, ConfigSchema } from '../../web/src/schema';
+import { DEV } from '../env';
 
 class Draw {
     private viewIndex = 0;
@@ -222,7 +223,7 @@ class Draw {
         console.log(`Drawing current view (index: ${this.viewIndex})`);
         const canvas = await this.drawViewCanvas(this.viewIndex);
 
-        if (process.env.DEV === 'true') {
+        if (DEV) {
             // Save the canvas as a PNG file
             const filename = `view-${this.viewIndex}.png`;
             const out = createWriteStream(filename);

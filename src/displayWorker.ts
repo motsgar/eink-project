@@ -2,6 +2,7 @@ import { ENDIANNESS, IMAGE_ROTATION, IT8951, type PIXEL_PACKING, type SystemInfo
 import { parentPort as _parentPort } from 'node:worker_threads';
 
 import { DisplayOperationError, type FromWorkerMessage, type ToWorkerMessage } from './displayWorkerMessageTypes';
+import { DISPLAY_VOLTAGE } from './env';
 
 if (_parentPort === null) {
     throw new Error('Display worker must be run as a worker thread');
@@ -13,13 +14,7 @@ let screenInfo: SystemInfo | undefined;
 let enabled = false;
 
 const initialize = (): void => {
-    const envString = process.env.DISPLAY_VOLTAGE ?? '-1.5';
-    const voltage = parseFloat(envString);
-    if (isNaN(voltage) || voltage < -5 || voltage > 0) {
-        // arbitrary voltage limits
-        throw new DisplayOperationError(`Invalid voltage: ${envString}, must be between -5 and 0`);
-    }
-    const vcom = -voltage * 1000;
+    const vcom = -DISPLAY_VOLTAGE * 1000;
     screen = new IT8951(vcom);
     screenInfo = screen.systemInfo();
     enabled = true;

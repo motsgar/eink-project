@@ -1,8 +1,10 @@
 import { EventEmitter } from 'node:events';
 import { SerialPort } from 'serialport';
 
-const BYTESReadCO2 = [0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79];
-const BYTESABCOff = [0xFF, 0x01, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x86];
+import { DEV } from '../../env';
+
+const BYTESReadCO2 = [0xff, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79];
+const BYTESABCOff = [0xff, 0x01, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x86];
 
 class CO2Sensor {
     co2: number;
@@ -15,7 +17,7 @@ class CO2Sensor {
         this.co2SerialBuffer = [];
         this.co2Events = new EventEmitter({ captureRejections: true });
 
-        if (process.env.DEV === 'true') return;
+        if (DEV) return;
 
         this.serialPort = new SerialPort({ path: '/dev/serial0', baudRate: 9600 });
         this.sendPacket(BYTESABCOff);
@@ -48,7 +50,7 @@ class CO2Sensor {
     private getChecksum(packet: number[]): number {
         let checksum = 0;
         for (let i = 1; i < 8; i++) checksum = (checksum + packet[i]) % 256;
-        checksum = 0xFF - checksum;
+        checksum = 0xff - checksum;
         checksum += 1;
         return checksum % 256;
     }

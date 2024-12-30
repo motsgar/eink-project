@@ -2,12 +2,11 @@ import bodyParser from 'body-parser';
 import express, { type Express } from 'express';
 import path from 'node:path';
 
+import { WEBIMAGES } from './env';
 import { draw } from './ui/Draw';
 import { ConfigSchema } from '../web/src/schema';
 
-/* eslint-disable @typescript-eslint/no-misused-promises */
-
-export default class HttpServer {
+export default class WebServer {
     private http: Express;
     private images: Buffer[];
 
@@ -44,30 +43,31 @@ export default class HttpServer {
 
             await draw.readyPromise;
             await draw.updateConfig(updatedData);
-            if (process.env.WEBIMAGES === 'true') {
-                this.images = await draw.getAllViewsAsImages();
-            }
+            if (WEBIMAGES) this.images = await draw.getAllViewsAsImages();
         });
 
-        this.http.listen(3000, () => {
-            console.log('Server running on 3000');
+        // TODO: Read images from draw code
+        // if (WEBIMAGES) {
+        //     draw.readyPromise
+        //         .then(async () => {
+        //             this.images = await draw.getAllViewsAsImages();
+        //         })
+        //         .catch(console.error);
+
+        //     setInterval(() => {
+        //         (async () => {
+        //             await draw.readyPromise;
+        //             this.images = await draw.getAllViewsAsImages();
+        //         })().catch(console.error);
+        //     }, 60 * 1000);
+        // }
+    }
+
+    async listen(port: number): Promise<void> {
+        return new Promise((resolve) => {
+            this.http.listen(port, () => resolve());
         });
-
-        if (process.env.WEBIMAGES === 'true') {
-            draw.readyPromise
-                .then(async () => {
-                    this.images = await draw.getAllViewsAsImages();
-                })
-                .catch(console.error);
-
-            setInterval(() => {
-                (async () => {
-                    await draw.readyPromise;
-                    this.images = await draw.getAllViewsAsImages();
-                })().catch(console.error);
-            }, 60 * 1000);
-        }
     }
 }
 
-export const httpServer = new HttpServer();
+export const webServer = new WebServer();

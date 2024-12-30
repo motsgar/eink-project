@@ -99,6 +99,7 @@ export default tseslint.config(
             'unicorn/no-null': 'off',
             'unicorn/no-process-exit': 'off', // Turn off if CLI app
             'unicorn/no-single-promise-in-promise-methods': 'off',
+            'unicorn/number-literal-case': 'off',
             'unicorn/prefer-module': 'off',
             'unicorn/prefer-number-properties': 'off',
             'unicorn/prefer-ternary': 'off',

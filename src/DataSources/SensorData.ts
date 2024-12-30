@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises';
 
+import { DEV } from '../env';
 import { co2Sensor } from './sensors/CO2Sensor';
 import { envSensor } from './sensors/EnvSensor';
 import { fakeCo2Sensor } from './sensors/FakeCO2Sensor';
@@ -23,7 +24,7 @@ class SensorData {
     constructor() {
         this.sensorHistory = [];
 
-        if (process.env.DEV === 'true') {
+        if (DEV) {
             this.readyPromise = this.writeFakeData().then(async () => {
                 await this.readDataFromFile();
                 await this.sensorDataLoop();
@@ -213,10 +214,9 @@ class SensorData {
     }
 
     private async readSensorData(timestamp: Date): Promise<void> {
-        const promise =
-            process.env.DEV === 'true'
-                ? Promise.all([fakeCo2Sensor.getData(), fakeEnvSensor.getData()])
-                : Promise.all([co2Sensor.getData(), envSensor.getData()]);
+        const promise = DEV
+            ? Promise.all([fakeCo2Sensor.getData(), fakeEnvSensor.getData()])
+            : Promise.all([co2Sensor.getData(), envSensor.getData()]);
         await promise
             .then(async ([co2Data, envData]) => {
                 this.latestData = {

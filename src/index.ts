@@ -1,39 +1,25 @@
-import { createCanvas } from 'canvas';
-
-import { cleanup, drawCanvas, initialize as initDisplay } from './display';
-
-import 'dotenv/config';
+import { cleanup, initialize as initDisplay } from './display';
+import { webServer } from './webServer';
 
 const initialize = async (): Promise<void> => {
-    const initPromises = [
-        initDisplay(),
-        initDataSources(),
-        initUiModules(),
-        startWebServer(),
-    ];
+    const webPort = 3000;
+    const webPromise = webServer.listen(webPort).then(() => {
+        console.log(`HTTP server running on ${webPort}`);
+    });
+
+    const initPromises = [initDisplay(), initDataSources(), initUiModules(), webPromise];
 
     await Promise.all(initPromises);
 };
 
-initialize().then(() => {
-    console.log('Initialized');
-}).catch((error) => {
-    console.error('Failed to initialize');
-    console.error(error);
-});
-
-
-const canvas = createCanvas(1000, 800);
-const ctx = canvas.getContext('2d');
-
-let number = 0;
-// Write "Awesome!"
-ctx.fillStyle = 'gray';
-ctx.fillRect(0, 0, 1000, 800);
-ctx.fillStyle = 'black';
-ctx.font = '100px Impact';
-ctx.rotate(0.1);
-ctx.fillText('Awesome! ' + number, 50, 100);
+initialize()
+    .then(() => {
+        console.log('Initialized');
+    })
+    .catch((error) => {
+        console.error('Failed to initialize');
+        console.error(error);
+    });
 
 const shutdown = async (): Promise<void> => {
     console.log('\nShutting down');
@@ -43,28 +29,6 @@ const shutdown = async (): Promise<void> => {
     console.log('Exiting');
     process.exit();
 };
-
-initDisplay()
-    .then(async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        while (true) {
-            console.log('draw');
-            await drawCanvas(200, 200, canvas).catch((error) => {
-                console.error(error);
-            });
-            console.log('draw done');
-            number++;
-            ctx.fillStyle = 'gray';
-            ctx.fillRect(0, 0, 1000, 800);
-            ctx.fillStyle = 'black';
-            ctx.fillText('Awesomeaa! ' + number, 50, 100);
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-    })
-    .catch((error) => {
-        console.error('failed to initialize display');
-        console.error(error);
-    });
 
 process.on('SIGINT', () => {
     shutdown().catch(console.error);

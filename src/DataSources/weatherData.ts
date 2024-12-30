@@ -3,6 +3,7 @@ import * as fs from 'node:fs/promises';
 import suncalc from 'suncalc';
 
 import { type Forecast, type Observation, parseForecastXml, parseObservationXml } from './weatherParse';
+import { DEV } from '../env';
 
 export type Warnings = {
     forestfire: boolean;
@@ -41,7 +42,7 @@ class WeatherData {
                     resolve();
                     setInterval(
                         () => {
-                            if (process.env.DEV === 'true') this.fetchWeatherData().catch(console.error);
+                            if (DEV) this.fetchWeatherData().catch(console.error);
                             else this.fetchWeatherData().catch(console.error);
                         },
                         1000 * 60 * 15,
