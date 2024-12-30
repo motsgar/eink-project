@@ -11,11 +11,7 @@ export class Status extends EInkModule {
 
     constructor(settings: ModuleSettings) {
         super(settings);
-        this.readyPromise = Promise.all([
-            this.loadIcons(),
-            weatherDataSource.readyPromise,
-            sensorDataSource.readyPromise,
-        ]);
+        this.readyPromise = this.loadIcons();
     }
 
     private async loadIcons(): Promise<void> {

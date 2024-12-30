@@ -19,7 +19,7 @@ export type SensorDataType = {
 class SensorDataSource {
     latestData?: SensorDataType;
     private sensorHistory: SensorDataType[];
-    readyPromise: Promise<void>;
+    readyPromise: Promise<unknown>;
     dataLoopTimeout?: NodeJS.Timeout;
     thinDataInterval?: NodeJS.Timeout;
 

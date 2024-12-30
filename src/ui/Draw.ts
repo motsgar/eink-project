@@ -78,12 +78,16 @@ class Draw {
             i += 1;
         }
 
-        console.log('Awaiting module readyPromises');
+        const readyPromises: Promise<unknown>[] = [];
         for (const view of this.modules) {
             for (const module of view) {
-                await module.readyPromise;
+                if (module.readyPromise !== undefined) readyPromises.push(module.readyPromise);
             }
         }
+
+        console.log('Awaiting module readyPromises');
+        await Promise.all(readyPromises);
+
         console.log('Awaiting module readyPromises finished');
     }
 

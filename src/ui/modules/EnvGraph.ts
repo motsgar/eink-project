@@ -18,8 +18,6 @@ export class EnvGraph extends EInkModule {
         const defaultTimePeriod = 3 * 60;
         this.timePeriod = settings.timePeriod ?? defaultTimePeriod;
         this.detailedSensorData = settings.detailedSensorData ?? false;
-
-        this.readyPromise = Promise.all([sensorDataSource.readyPromise]);
     }
 
     draw(width: number, height: number): Canvas {

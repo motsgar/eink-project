@@ -30,7 +30,7 @@ export type WeatherDataType = {
 class WeatherDataSource {
     weatherData?: WeatherDataType;
     weatherSymbols: { [key: number]: Image };
-    readyPromise: Promise<void>;
+    readyPromise: Promise<unknown>;
     fetchInterval?: NodeJS.Timeout;
 
     constructor() {

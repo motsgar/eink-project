@@ -13,8 +13,6 @@ export class HorizontalWeather extends EInkModule {
 
         const defaultTimes = [0, 1, 2, 3, 5, 7, 10, 14];
         this.times = settings.times ?? defaultTimes;
-
-        this.readyPromise = Promise.all([weatherDataSource.readyPromise]);
     }
 
     private getText(forecast: Forecast): string {

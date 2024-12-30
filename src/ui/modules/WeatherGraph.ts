@@ -23,8 +23,6 @@ export class WeatherGraph extends EInkModule {
 
         const defaultTimePeriod = 20;
         this.timePeriod = settings.timePeriod ?? defaultTimePeriod;
-
-        this.readyPromise = Promise.all([weatherDataSource.readyPromise]);
     }
 
     private getData(): DataType {
