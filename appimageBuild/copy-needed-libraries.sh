@@ -113,6 +113,9 @@ raw_libraries=(
     libpango-1.0.so.0
     libgif.so.7
     librsvg-2.so.2
+    # Not directly in installed packages, but probably in some of their dependencies
+    libharfbuzz.so.0
+    libfribidi.so.0
 )
 
 libraries=()

@@ -1,8 +1,27 @@
 import { createCanvas } from 'canvas';
 
-import { cleanup, drawCanvas, initialize } from './display';
+import { cleanup, drawCanvas, initialize as initDisplay } from './display';
 
 import 'dotenv/config';
+
+const initialize = async (): Promise<void> => {
+    const initPromises = [
+        initDisplay(),
+        initDataSources(),
+        initUiModules(),
+        startWebServer(),
+    ];
+
+    await Promise.all(initPromises);
+};
+
+initialize().then(() => {
+    console.log('Initialized');
+}).catch((error) => {
+    console.error('Failed to initialize');
+    console.error(error);
+});
+
 
 const canvas = createCanvas(1000, 800);
 const ctx = canvas.getContext('2d');
@@ -25,10 +44,11 @@ const shutdown = async (): Promise<void> => {
     process.exit();
 };
 
-initialize()
+initDisplay()
     .then(async () => {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         while (true) {
+            console.log('draw');
             await drawCanvas(200, 200, canvas).catch((error) => {
                 console.error(error);
             });

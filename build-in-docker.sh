@@ -5,7 +5,9 @@ set -e
 IMAGE_NAME="temp-builder-image-$(date +%s)"
 
 pushd build-environment
+cp ../package.json ../yarn.lock .
 docker buildx build --platform=linux/aarch64 -t "$IMAGE_NAME":latest . --load
+rm package.json yarn.lock
 popd
 
 INPUT_FILES=(
@@ -19,6 +21,7 @@ INPUT_FILES=(
     "package.json"
     "tsconfig.json"
     "yarn.lock"
+    "a.out"
 )
 OUTPUT_FILES=("eink.AppImage" "AppDir")
 DOCKER_DIR="/app"

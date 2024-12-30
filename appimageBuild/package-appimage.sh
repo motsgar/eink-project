@@ -24,12 +24,19 @@ fi
 appimageBuild/remove-other-architectures.sh
 
 mkdir -p AppDir/nodeapp
+mkdir -p AppDir/usr/etc
+mkdir -p AppDir/usr/lib
+
 cp -r dist AppDir/nodeapp
 cp -r node_modules AppDir/nodeapp
 cp -r resources AppDir/nodeapp
 cp -r web AppDir/nodeapp
 cp package.json AppDir/nodeapp
 cp yarn.lock AppDir/nodeapp
+
+
+cp -r /etc/ImageMagick-* AppDir/usr/etc
+cp -r /usr/lib/$(dpkg-architecture -q DEB_HOST_MULTIARCH)/ImageMagick-* AppDir/usr/lib
 
 "$SCRIPT_DIR/copy-needed-libraries.sh" AppDir
 
@@ -49,5 +56,6 @@ else
 fi
 export ARCH
 NODE_PATH="$(command -v node)"
-linuxdeploy --appdir AppDir  --custom-apprun appimageResources/entrypoint.sh -e "$NODE_PATH" -d appimageResources/eink.desktop -i appimageResources/eink.png -o appimage -p checkrt | tee /dev/stderr
+CONVERT_PATH="$(command -v convert)"
+linuxdeploy --appdir AppDir  --custom-apprun appimageResources/entrypoint.sh -e "$NODE_PATH" -e "$CONVERT_PATH" -e /usr/bin/echo -e $(pwd)/a.out -d appimageResources/eink.desktop -i appimageResources/eink.png -o appimage -p checkrt | tee /dev/stderr
 touch eink.AppImage
