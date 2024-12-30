@@ -39,6 +39,7 @@ declare module 'bme280' {
 
     export type Sensor = {
         read(): Promise<{ temperature: number; pressure: number; humidity: number }>;
+        close(): Promise<void>;
     };
 
     export function open(options: OpenOptions): Promise<Sensor>;

@@ -5,7 +5,7 @@ import { Chart, type ScriptableScaleContext, registerables } from 'chart.js';
 
 import { EInkModule } from './EInkModule';
 import type { ModuleSettings } from '../../../web/src/schema';
-import { sensorData } from '../SensorData';
+import { sensorDataSource } from '../../dataSources/SensorDataSource';
 
 export class EnvGraph extends EInkModule {
     timePeriod: number; // minutes
@@ -19,13 +19,13 @@ export class EnvGraph extends EInkModule {
         this.timePeriod = settings.timePeriod ?? defaultTimePeriod;
         this.detailedSensorData = settings.detailedSensorData ?? false;
 
-        this.readyPromise = Promise.all([sensorData.readyPromise]);
+        this.readyPromise = Promise.all([sensorDataSource.readyPromise]);
     }
 
     draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
-        const sensorData_ = sensorData.getSensorData(this.timePeriod * 60, this.detailedSensorData);
+        const sensorData_ = sensorDataSource.getSensorData(this.timePeriod * 60, this.detailedSensorData);
 
         // Cause gaps in missing data
         for (let i = 1; i < sensorData_.length; i++) {
@@ -86,9 +86,7 @@ export class EnvGraph extends EInkModule {
                         },
                         grid: {
                             color: (context: ScriptableScaleContext | { tick: undefined }) =>
-                                (context.tick?.major) || this.timePeriod < 12 * 60
-                                    ? '#333333'
-                                    : '#ffffff00',
+                                context.tick?.major || this.timePeriod < 12 * 60 ? '#333333' : '#ffffff00',
                         },
                     },
                     y: {

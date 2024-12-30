@@ -13,18 +13,22 @@ import { Weather } from './modules/Weather';
 import { WeatherGraph } from './modules/WeatherGraph';
 import { type Config, ConfigSchema } from '../../web/src/schema';
 import { DEV } from '../env';
+import { resolveBinaryPath } from '../utils';
 
 class Draw {
     private viewIndex = 0;
     private modules: EInkModule[][];
     private config?: Config;
-    readyPromise: Promise<void>;
+    readyPromise: Promise<unknown>;
 
     constructor() {
         this.modules = [];
-        this.readyPromise = this.loadConfig().then(async () => {
-            await this.loadModules();
-        });
+        this.readyPromise = Promise.all([
+            resolveBinaryPath('convert'),
+            this.loadConfig().then(async () => {
+                await this.loadModules();
+            }),
+        ]);
     }
 
     private async loadConfig(): Promise<void> {

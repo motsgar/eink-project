@@ -16,31 +16,43 @@ export type SensorDataType = {
     pressure: number;
 };
 
-class SensorData {
+class SensorDataSource {
     latestData?: SensorDataType;
     private sensorHistory: SensorDataType[];
     readyPromise: Promise<void>;
+    dataLoopTimeout?: NodeJS.Timeout;
+    thinDataInterval?: NodeJS.Timeout;
 
     constructor() {
         this.sensorHistory = [];
 
-        if (DEV) {
-            this.readyPromise = this.writeFakeData().then(async () => {
-                await this.readDataFromFile();
-                await this.sensorDataLoop();
-            });
-        } else {
-            this.readyPromise = this.readDataFromFile().then(async () => {
-                await this.sensorDataLoop();
-            });
-        }
+        this.readyPromise = DEV
+            ? this.writeFakeData().then(async () => {
+                  await this.readDataFromFile();
+              })
+            : this.readDataFromFile();
+    }
 
-        setInterval(
+    async start(): Promise<void> {
+        await Promise.all([co2Sensor.start(), envSensor.start()]);
+        await this.sensorDataLoop();
+
+        this.thinDataInterval = setInterval(
             () => {
                 this.thinDataFiles().catch(console.error);
             },
             24 * 60 * 60 * 1000,
         );
+    }
+
+    async stop(): Promise<void> {
+        clearTimeout(this.dataLoopTimeout);
+        this.dataLoopTimeout = undefined;
+
+        await Promise.all([co2Sensor.stop(), envSensor.stop()]);
+
+        clearInterval(this.thinDataInterval);
+        this.thinDataInterval = undefined;
     }
 
     private async sensorDataLoop(): Promise<void> {
@@ -50,11 +62,13 @@ class SensorData {
         return new Promise((resolve) => {
             let timeoutTime = 1000 - milliseconds - OFFSET;
             if (timeoutTime < 0) timeoutTime += 1000;
-            setTimeout(() => {
+            this.dataLoopTimeout = setTimeout(() => {
                 (async () => {
                     await this.readSensorData(nextDate);
                     resolve();
-                    void this.sensorDataLoop();
+
+                    // Avoid race conditions
+                    if (this.dataLoopTimeout !== undefined) void this.sensorDataLoop();
                 })().catch(console.error);
             }, timeoutTime);
         });
@@ -230,4 +244,4 @@ class SensorData {
     }
 }
 
-export const sensorData = new SensorData();
+export const sensorDataSource = new SensorDataSource();

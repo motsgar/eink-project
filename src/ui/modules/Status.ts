@@ -2,8 +2,8 @@ import { type Canvas, type Image, createCanvas, loadImage } from 'canvas';
 
 import { EInkModule } from './EInkModule';
 import type { ModuleSettings } from '../../../web/src/schema';
-import { sensorData } from '../SensorData';
-import { weatherData } from '../weatherData';
+import { sensorDataSource } from '../../dataSources/SensorDataSource';
+import { weatherDataSource } from '../../dataSources/weatherDataSource';
 
 export class Status extends EInkModule {
     private sunriseIcon?: Image;
@@ -11,7 +11,11 @@ export class Status extends EInkModule {
 
     constructor(settings: ModuleSettings) {
         super(settings);
-        this.readyPromise = Promise.all([this.loadIcons(), weatherData.readyPromise, sensorData.readyPromise]);
+        this.readyPromise = Promise.all([
+            this.loadIcons(),
+            weatherDataSource.readyPromise,
+            sensorDataSource.readyPromise,
+        ]);
     }
 
     private async loadIcons(): Promise<void> {
@@ -23,10 +27,10 @@ export class Status extends EInkModule {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
 
-        const observation = weatherData.weatherData?.observation;
-        const sunInfo = weatherData.weatherData?.sunInfo;
-        const warnings = weatherData.weatherData?.warnings;
-        const sensorData_ = sensorData.latestData;
+        const observation = weatherDataSource.weatherData?.observation;
+        const sunInfo = weatherDataSource.weatherData?.sunInfo;
+        const warnings = weatherDataSource.weatherData?.warnings;
+        const sensorData_ = sensorDataSource.latestData;
         if (warnings === undefined || sunInfo === undefined || observation === undefined) {
             throw new Error("Weather data hasn't been initialized");
         }

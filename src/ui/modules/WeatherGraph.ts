@@ -5,7 +5,7 @@ import { Chart, type ChartData, type ScriptableScaleContext, registerables } fro
 
 import { EInkModule } from './EInkModule';
 import type { ModuleSettings } from '../../../web/src/schema';
-import { weatherData } from '../weatherData';
+import { weatherDataSource } from '../../dataSources/weatherDataSource';
 
 type DataType = {
     labels: Date[];
@@ -24,11 +24,11 @@ export class WeatherGraph extends EInkModule {
         const defaultTimePeriod = 20;
         this.timePeriod = settings.timePeriod ?? defaultTimePeriod;
 
-        this.readyPromise = Promise.all([weatherData.readyPromise]);
+        this.readyPromise = Promise.all([weatherDataSource.readyPromise]);
     }
 
     private getData(): DataType {
-        const forecasts = weatherData.weatherData?.forecasts;
+        const forecasts = weatherDataSource.weatherData?.forecasts;
         if (forecasts === undefined) throw new Error("Weather data hasn't been initialized");
 
         const labels: Date[] = [];

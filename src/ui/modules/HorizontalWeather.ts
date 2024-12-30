@@ -2,8 +2,8 @@ import { type Canvas, createCanvas } from 'canvas';
 
 import { EInkModule } from './EInkModule';
 import type { ModuleSettings } from '../../../web/src/schema';
-import { weatherData } from '../weatherData';
-import type { Forecast } from '../weatherParse';
+import { weatherDataSource } from '../../dataSources/weatherDataSource';
+import type { Forecast } from '../../dataSources/weatherParse';
 
 export class HorizontalWeather extends EInkModule {
     times: number[];
@@ -14,7 +14,7 @@ export class HorizontalWeather extends EInkModule {
         const defaultTimes = [0, 1, 2, 3, 5, 7, 10, 14];
         this.times = settings.times ?? defaultTimes;
 
-        this.readyPromise = Promise.all([weatherData.readyPromise]);
+        this.readyPromise = Promise.all([weatherDataSource.readyPromise]);
     }
 
     private getText(forecast: Forecast): string {
@@ -33,8 +33,8 @@ export class HorizontalWeather extends EInkModule {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
 
-        const observation = weatherData.weatherData?.observation;
-        const forecasts = weatherData.weatherData?.forecasts;
+        const observation = weatherDataSource.weatherData?.observation;
+        const forecasts = weatherDataSource.weatherData?.forecasts;
         if (observation === undefined || forecasts === undefined) {
             throw new Error("Weather data hasn't been initialized");
         }
@@ -79,8 +79,8 @@ export class HorizontalWeather extends EInkModule {
 
             const symbolId: number = forecasts[time].smartSymbol;
             const imageSize = blockHeight - svgPadding;
-            if (symbolId in weatherData.weatherSymbols) {
-                const img = weatherData.weatherSymbols[symbolId];
+            if (symbolId in weatherDataSource.weatherSymbols) {
+                const img = weatherDataSource.weatherSymbols[symbolId];
                 ctx.drawImage(img, xPos, yPos + (blockHeight - imageSize) / 2, imageSize, imageSize);
             } else {
                 console.error(`Failed to find weather symbol ${symbolId}`);

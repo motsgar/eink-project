@@ -27,28 +27,30 @@ export type WeatherDataType = {
     warnings: Warnings;
 };
 
-class WeatherData {
+class WeatherDataSource {
     weatherData?: WeatherDataType;
     weatherSymbols: { [key: number]: Image };
     readyPromise: Promise<void>;
+    fetchInterval?: NodeJS.Timeout;
 
     constructor() {
         this.weatherSymbols = {};
+        this.readyPromise = this.initializeWeatherSymbols();
+    }
 
-        this.readyPromise = new Promise((resolve, reject) => {
-            Promise.all([this.initializeWeatherSymbols(), this.fetchWeatherData()])
-                .then(() => {
-                    resolve();
-                    setInterval(
-                        () => {
-                            if (process.env.DEV === 'true') this.fetchWeatherData().catch(console.error);
-                            else this.fetchWeatherData().catch(console.error);
-                        },
-                        1000 * 60 * 15,
-                    );
-                })
-                .catch((error) => reject(error as Error));
-        });
+    async start(): Promise<void> {
+        await this.fetchWeatherData();
+        this.fetchInterval = setInterval(
+            () => {
+                this.fetchWeatherData().catch(console.error);
+            },
+            1000 * 60 * 15,
+        );
+    }
+
+    stop(): void {
+        clearInterval(this.fetchInterval);
+        this.fetchInterval = undefined;
     }
 
     private async fetchWeatherData(): Promise<void> {
@@ -108,4 +110,4 @@ class WeatherData {
     }
 }
 
-export const weatherData = new WeatherData();
+export const weatherDataSource = new WeatherDataSource();

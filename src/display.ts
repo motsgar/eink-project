@@ -194,7 +194,7 @@ export const drawCanvas = async (x: number, y: number, canvas: Canvas): Promise<
     ]);
 };
 
-export const cleanup = async (): Promise<void> => {
+export const stopDisplay = async (): Promise<void> => {
     if (cleanupRunning) return;
 
     console.log('Cleaning up display');

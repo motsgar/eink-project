@@ -1,8 +1,10 @@
 import { EventEmitter } from 'node:events';
 import { SerialPort } from 'serialport';
 
-const BYTESReadCO2 = [0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79];
-const BYTESABCOff = [0xFF, 0x01, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x86];
+import { DEV } from '../../env';
+
+const BYTESReadCO2 = [0xff, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79];
+const BYTESABCOff = [0xff, 0x01, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x86];
 
 class CO2Sensor {
     co2: number;
@@ -14,9 +16,10 @@ class CO2Sensor {
         this.co2 = 600;
         this.co2SerialBuffer = [];
         this.co2Events = new EventEmitter({ captureRejections: true });
+    }
 
-        if (process.env.DEV === 'true') return;
-
+    start(): void {
+        if (DEV) return;
         this.serialPort = new SerialPort({ path: '/dev/serial0', baudRate: 9600 });
         this.sendPacket(BYTESABCOff);
 
@@ -29,37 +32,10 @@ class CO2Sensor {
         this.serialPort.on('data', this.handleSerialData.bind(this));
     }
 
-    private handleSerialData(data: Buffer): void {
-        this.co2SerialBuffer.push(...data);
-        if (this.co2SerialBuffer.length < 9) return;
-        if (this.co2SerialBuffer.length > 9) throw new Error('Received too much data from co2 sensor');
-
-        if (this.getChecksum(this.co2SerialBuffer) !== this.co2SerialBuffer[8]) {
-            this.co2SerialBuffer = [];
-            this.co2Events.emit('co2', 0, new Error('Bad checksum'));
-            return;
-        }
-        const co2 = this.co2SerialBuffer[2] * 256 + this.co2SerialBuffer[3];
-        this.co2SerialBuffer = [];
-
-        this.co2Events.emit('co2', co2);
-    }
-
-    private getChecksum(packet: number[]): number {
-        let checksum = 0;
-        for (let i = 1; i < 8; i++) checksum = (checksum + packet[i]) % 256;
-        checksum = 0xFF - checksum;
-        checksum += 1;
-        return checksum % 256;
-    }
-
-    private sendPacket(packet: number[]): void {
-        if (this.serialPort === undefined) {
-            throw new Error('CO2Sensor tried to send package but serialport was undefined');
-        }
-        this.serialPort.write(packet, (err) => {
-            if (err) throw err;
-        });
+    stop(): void {
+        if (DEV) return;
+        this.serialPort?.close();
+        this.serialPort = undefined;
     }
 
     async getData(): Promise<number> {
@@ -83,6 +59,39 @@ class CO2Sensor {
                 errorCount++;
             }
         }
+    }
+
+    private handleSerialData(data: Buffer): void {
+        this.co2SerialBuffer.push(...data);
+        if (this.co2SerialBuffer.length < 9) return;
+        if (this.co2SerialBuffer.length > 9) throw new Error('Received too much data from co2 sensor');
+
+        if (this.getChecksum(this.co2SerialBuffer) !== this.co2SerialBuffer[8]) {
+            this.co2SerialBuffer = [];
+            this.co2Events.emit('co2', 0, new Error('Bad checksum'));
+            return;
+        }
+        const co2 = this.co2SerialBuffer[2] * 256 + this.co2SerialBuffer[3];
+        this.co2SerialBuffer = [];
+
+        this.co2Events.emit('co2', co2);
+    }
+
+    private getChecksum(packet: number[]): number {
+        let checksum = 0;
+        for (let i = 1; i < 8; i++) checksum = (checksum + packet[i]) % 256;
+        checksum = 0xff - checksum;
+        checksum += 1;
+        return checksum % 256;
+    }
+
+    private sendPacket(packet: number[]): void {
+        if (this.serialPort === undefined) {
+            throw new Error('CO2Sensor tried to send package but serialport was undefined');
+        }
+        this.serialPort.write(packet, (err) => {
+            if (err) throw err;
+        });
     }
 }
 

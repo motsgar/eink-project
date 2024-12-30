@@ -5,7 +5,7 @@ import { Chart, type ScriptableScaleContext, registerables } from 'chart.js';
 
 import { EInkModule } from './EInkModule';
 import type { ModuleSettings } from '../../../web/src/schema';
-import { sensorData } from '../SensorData';
+import { sensorDataSource } from '../../dataSources/SensorDataSource';
 
 export class CO2Graph extends EInkModule {
     timePeriod: number; // minutes
@@ -19,13 +19,13 @@ export class CO2Graph extends EInkModule {
         this.timePeriod = settings.timePeriod ?? defaultTimePeriod;
         this.detailedSensorData = settings.detailedSensorData ?? false;
 
-        this.readyPromise = Promise.all([sensorData.readyPromise]);
+        this.readyPromise = Promise.all([sensorDataSource.readyPromise]);
     }
 
     draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
-        const sensorData_ = sensorData.getSensorData(this.timePeriod * 60, this.detailedSensorData);
+        const sensorData_ = sensorDataSource.getSensorData(this.timePeriod * 60, this.detailedSensorData);
 
         // Cause gaps in missing data
         for (let i = 1; i < sensorData_.length; i++) {
