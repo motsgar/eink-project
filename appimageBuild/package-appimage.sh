@@ -57,5 +57,5 @@ fi
 export ARCH
 NODE_PATH="$(command -v node)"
 CONVERT_PATH="$(command -v convert)"
-linuxdeploy --appdir AppDir  --custom-apprun appimageResources/entrypoint.sh -e "$NODE_PATH" -e "$CONVERT_PATH" -e /usr/bin/echo -e $(pwd)/a.out -d appimageResources/eink.desktop -i appimageResources/eink.png -o appimage -p checkrt | tee /dev/stderr
+linuxdeploy --appdir AppDir --custom-apprun appimageResources/entrypoint.sh -e "$NODE_PATH" -e "$CONVERT_PATH" -d appimageResources/eink.desktop -i appimageResources/eink.png -o appimage -p checkrt | tee /dev/stderr
 touch eink.AppImage

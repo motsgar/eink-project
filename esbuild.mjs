@@ -2,7 +2,7 @@ import { build } from 'esbuild';
 
 build({
     bundle: true,
-    entryPoints: ['./src/ui/index.ts'],
+    entryPoints: ['./src/index.ts'],
     format: 'cjs',
     minify: true,
     outdir: './dist',

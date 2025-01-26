@@ -17,6 +17,8 @@ if [ "$ARCH" == "aarch64" ]; then
     apt-get install -y qemu-user-static binfmt-support
     update-binfmts --enable qemu-aarch64
     qemu-aarch64-static ./linuxdeploy.AppImage --appimage-extract
+    update-binfmts --disable qemu-aarch64
+    apt-get remove -y qemu-user-static binfmt-support
 else
     echo "using native architecture"
     ./linuxdeploy.AppImage --appimage-extract

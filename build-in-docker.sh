@@ -21,7 +21,6 @@ INPUT_FILES=(
     "package.json"
     "tsconfig.json"
     "yarn.lock"
-    "a.out"
 )
 OUTPUT_FILES=("eink.AppImage" "AppDir")
 DOCKER_DIR="/app"
