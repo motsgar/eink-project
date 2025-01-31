@@ -1,7 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-/* eslint-disable require-unicode-regexp */
+ 
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,9 +11,11 @@ export default defineConfig({
         proxy: {
             '/api': {
                 target: 'http://localhost:3000',
-                rewrite: (path) => path.replace(/^\/api/, ''),
             },
         },
     },
     envDir: '../',
+    build: {
+        outDir: '../webDist',
+    },
 });

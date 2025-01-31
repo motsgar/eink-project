@@ -77,3 +77,16 @@ export const resolveBinaryPath = async (command: string): Promise<string> => {
     }
     throw new Error('Executable binary ' + command + ' not found');
 };
+
+// A crude way to check if running on a raspberry pi
+export const runningOnPi = async (): Promise<boolean> => {
+    let cpuInfo: string;
+    try {
+        cpuInfo = await fs.readFile('/proc/cpuinfo', 'utf8');
+    } catch (error) {
+        console.error('Error reading /proc/cpuinfo to know if running on raspberry pi:', error);
+        return false;
+    }
+
+    return cpuInfo.includes('Raspberry Pi');
+};

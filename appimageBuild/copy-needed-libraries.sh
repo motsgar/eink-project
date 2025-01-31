@@ -18,6 +18,7 @@ raw_libraries=(
     libpango-1.0.so.0
     libgif.so.7
     librsvg-2.so.2
+    libharfbuzz.so.0
 )
 
 libraries=()

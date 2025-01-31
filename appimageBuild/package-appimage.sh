@@ -28,9 +28,9 @@ mkdir -p AppDir/usr/etc
 mkdir -p AppDir/usr/lib
 
 cp -r dist AppDir/nodeapp
+cp -r webDist AppDir/nodeapp
 cp -r node_modules AppDir/nodeapp
 cp -r resources AppDir/nodeapp
-cp -r web AppDir/nodeapp
 cp package.json AppDir/nodeapp
 cp yarn.lock AppDir/nodeapp
 

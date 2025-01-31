@@ -15,7 +15,9 @@ let enabled = false;
 
 const initialize = (): void => {
     const vcom = -DISPLAY_VOLTAGE * 1000;
+    
     screen = new IT8951(vcom);
+    console.log('worker screen initialize start');
     screenInfo = screen.systemInfo();
     enabled = true;
 

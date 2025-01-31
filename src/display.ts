@@ -1,9 +1,7 @@
 import type { Canvas } from 'canvas';
 import { ENDIANNESS, IMAGE_ROTATION, PIXEL_PACKING, WAVEFORM } from 'it8951';
 import { EventEmitter, once } from 'node:events';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { Worker } from 'node:worker_threads';
+import displayWorker from 'worker://displayWorker';
 
 import {
     DisplayOperationError,
@@ -12,11 +10,11 @@ import {
     type ToWorkerMessage,
 } from './displayWorkerMessageTypes';
 
-const workerPath = path.dirname(fileURLToPath(import.meta.url));
-const worker = new Worker(path.resolve(workerPath, 'displayWorker.js'));
+const worker = displayWorker.create();
 
 let cleanupRunning = false;
 let turnRunning = false;
+// eslint-disable-next-line unicorn/prefer-event-target
 const nextTurnEvent = new EventEmitter();
 
 const turnWrapper = <ReturnType, Args extends unknown[]>(
@@ -116,7 +114,11 @@ const screen = {
     screenInfo: undefined as undefined | ScreenInfoProps,
 };
 
-export const initialize = async (): Promise<void> => {
+export const initialize = async (useHardware: boolean): Promise<void> => {
+    if (!useHardware) {
+        console.log('Not running on a Raspberry Pi, skipping display initialization');
+        return;
+    }
     console.log('Initializing display');
 
     const screenInfo = await screen.initialize();

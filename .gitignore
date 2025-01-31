@@ -10,3 +10,5 @@ AppDir
 eink.AppImage
 /build-environment/package.json
 /build-environment/yarn.lock
+background.png
+webDist
