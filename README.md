@@ -1,12 +1,21 @@
 # Eink Project
 
-This project is in its very initial stage of development and the codebase may not be fully functional or well-organized at this point.
-Images:
-
 <p align="middle">
     <img src="docImages/display.jpg" alt="Eink" width="45%" />
     <img src="docImages/inside.jpg" alt="Eink" width="45%" />
 </p>
+
+### Description
+
+The code is currently in only a kind of functional state. All of the code to do the drawing and sensor reading exists, although originally messily mashed together to quickly get working before winter assembly 2024. In its current state we are trying to clean up the mashed
+together code to have a more gracefully managed start/stop procedure
+and proper timing for updating minutes. In this sources current state,
+the application only starts up and initializes everything.
+
+The goal is to have appimage binaries released via ci that can just
+directly be run on the device. This almost works but some web ui src
+path resolving is broken. Also cross compilation in ci is having some
+problems.
 
 ### Installation
 
