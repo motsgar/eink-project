@@ -12,10 +12,21 @@ export default class Env {
 
     public async loadenv(): Promise<void> {
         const runningOnHardware = await runningOnPi();
-        if (!runningOnHardware) {
-            console.log('Not running on a Raspberry Pi, running emulated display and data sources');
+        this.EMULATED_HARDWARE = !runningOnHardware
+        if (process.env.EMULATED_HARDWARE !== undefined) {
+            this.EMULATED_HARDWARE = process.env.EMULATED_HARDWARE === 'true';
         }
-        this.EMULATED_HARDWARE = !runningOnHardware || process.env.EMULATED_HARDWARE === 'true';
+        if (runningOnHardware && this.EMULATED_HARDWARE) {
+            console.log('Running on raspberry pi, but in emulated hardware mode');
+        }
+        if (!runningOnHardware && !this.EMULATED_HARDWARE) {
+            console.log('Not running on raspberry pi, but trying to run on hardware as EMULATED_HARDWARE is overridden to false');
+        }
+        if (!runningOnHardware && this.EMULATED_HARDWARE) {
+            console.log('Not running on raspberry pi so emulating hardware');
+        }
+
+        
         this.PATH = process.env.PATH ?? '/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin';
 
         this.FAN_PWM_PIN = parseInt(process.env.FAN_PWM_PIN ?? '18', 10);
@@ -35,8 +46,8 @@ export default class Env {
                 throw new Error(`Invalid voltage: "${process.env.DISPLAY_VOLTAGE}", DISPLAY_VOLTAGE must be a float between -5 and 0`);
             }
         } else {
-            if (runningOnHardware) throw new Error('DISPLAY_VOLTAGE is required when running on hardware or when EMULATED_HARDWARE is not set');
-            else console.log('Allowing env DISPLAY_VOLTAGE to be undefined in emulated mode');
+            if (this.EMULATED_HARDWARE) console.log('Allowing env DISPLAY_VOLTAGE to be undefined in emulated mode');
+            else throw new Error('DISPLAY_VOLTAGE is required when running on hardware or when EMULATED_HARDWARE is not set');
         }
         
         this.isLoaded = true;
