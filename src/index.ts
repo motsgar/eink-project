@@ -2,6 +2,7 @@ import { initDataSources, stopDataSources } from './dataSources/dataUtil';
 // import { initialize as initDisplay, stopDisplay } from './display';
 // import { draw } from './ui/Draw';
 import { env } from './env';
+import { fan } from './fan';
 import { webServer } from './webServer';
 
 const webPort = 3000;
@@ -21,7 +22,7 @@ const initialize = async (): Promise<void> => {
         }
     });
 
-    const initPromises = [initDataSources(), webPromise];
+    const initPromises = [initDataSources(), fan.init(), webPromise];
 
     await Promise.all(initPromises);
 };
@@ -32,13 +33,15 @@ const shutdown = async (): Promise<void> => {
     // await stopDisplay();
     await stopDataSources();
 
-    console.log('Exiting');
     process.exit();
 };
 
 initialize()
     .then(() => {
         console.log('Initialized');
+        setInterval(() => {
+            console.log('fan speed:', fan.getSpeed());
+        }, 1000);
     })
     .catch((error) => {
         console.error('Failed to initialize');

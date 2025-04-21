@@ -28,6 +28,7 @@
         "it8951": "^0.1.1",
         "moment": "^2.29.4",
         "moment-timezone": "^0.5.43",
+        "pigpio": "^3.3.1",
         "serialport": "^13.0.0",
         "suncalc": "^1.9.0",
         "xml2js": "^0.6.2",

@@ -15,8 +15,17 @@ export default class Env {
         if (!runningOnHardware) {
             console.log('Not running on a Raspberry Pi, running emulated display and data sources');
         }
-        this.EMULATED_HARDWARE = runningOnHardware || process.env.EMULATED_HARDWARE === 'true';
+        this.EMULATED_HARDWARE = !runningOnHardware || process.env.EMULATED_HARDWARE === 'true';
         this.PATH = process.env.PATH ?? '/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin';
+
+        this.FAN_PWM_PIN = parseInt(process.env.FAN_PWM_PIN ?? '18', 10);
+        if (isNaN(this.FAN_PWM_PIN) || this.FAN_PWM_PIN < 0 || this.FAN_PWM_PIN > 40) {
+            throw new Error(`Invalid FAN_PWM_PIN: "${process.env.FAN_PWM_PIN}", must be a number between 0 and 40`);
+        }
+        this.FAN_TACH_PIN = parseInt(process.env.FAN_TACH_PIN ?? '23', 10);
+        if (isNaN(this.FAN_TACH_PIN) || this.FAN_TACH_PIN < 0 || this.FAN_TACH_PIN > 40) {
+            throw new Error(`Invalid FAN_TACH_PIN: "${process.env.FAN_TACH_PIN}", must be a number between 0 and 40`);
+        }
         
         if (process.env.DISPLAY_VOLTAGE !== undefined) {
             this.DISPLAY_VOLTAGE = parseFloat(process.env.DISPLAY_VOLTAGE);
