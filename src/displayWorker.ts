@@ -2,7 +2,7 @@ import { ENDIANNESS, IMAGE_ROTATION, IT8951, type PIXEL_PACKING, type SystemInfo
 import { parentPort as _parentPort } from 'node:worker_threads';
 
 import { DisplayOperationError, type FromWorkerMessage, type ToWorkerMessage } from './displayWorkerMessageTypes';
-import { DISPLAY_VOLTAGE } from './env';
+import { env } from './env';
 
 if (_parentPort === null) {
     throw new Error('Display worker must be run as a worker thread');
@@ -14,7 +14,7 @@ let screenInfo: SystemInfo | undefined;
 let enabled = false;
 
 const initialize = (): void => {
-    const vcom = -DISPLAY_VOLTAGE * 1000;
+    const vcom = -env.DISPLAY_VOLTAGE * 1000;
     
     screen = new IT8951(vcom);
     console.log('worker screen initialize start');

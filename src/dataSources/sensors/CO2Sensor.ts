@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { SerialPort } from 'serialport';
 
-import { DEV } from '../../env';
+import { env } from '../../env';
 
 const BYTESReadCO2 = [0xff, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79];
 const BYTESABCOff = [0xff, 0x01, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x86];
@@ -19,7 +19,7 @@ class CO2Sensor {
     }
 
     start(): void {
-        if (DEV) return;
+        if (env.EMULATED_HARDWARE) return;
         this.serialPort = new SerialPort({ path: '/dev/serial0', baudRate: 9600 });
         this.sendPacket(BYTESABCOff);
 
@@ -33,7 +33,7 @@ class CO2Sensor {
     }
 
     stop(): void {
-        if (DEV) return;
+        if (env.EMULATED_HARDWARE) return;
         this.serialPort?.close();
         this.serialPort = undefined;
     }

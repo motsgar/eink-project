@@ -3,7 +3,7 @@ import express, { type Express } from 'express';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { WEBIMAGES } from './env';
+import { env } from './env';
 import { draw } from './ui/Draw';
 import { ConfigSchema } from '../web/src/schema';
 
@@ -34,8 +34,22 @@ export default class WebServer {
         //     }, 60 * 1000);
         // }
     }
+    serveWebUi(): void {
+        this.http.use(express.static(path.join(__dirname, '../', 'webDist')));
+        this.http.get('*path', (req, res) => {
+            console.log('Serving web ui' + __dirname);
+            console.log('Serving web ui' + path.join(__dirname, '../', 'webDist', 'index.html'));
+            const manualPath = path.join(__dirname, '../', 'webDist', 'index.html');
+            readFile(manualPath).then((data) => {
+                console.log('File: ' + data.toString());
+            }).catch((err) => {
+                console.log('Serving web ui' + err);
+            });
+            res.sendFile(path.join(__dirname, '../', 'webDist', 'index.html'));
+        });
+    }
 
-    private registerRoutes(serveWebUi: boolean): void {
+    private registerRoutes(): void {
         const apiRouter = express.Router();
 
         apiRouter.get('/data', (req, res) => {
@@ -63,31 +77,16 @@ export default class WebServer {
 
             res.json({ message: 'Data updated successfully' });
 
-            await draw.readyPromise;
+            // TODO make sure module loaded
             await draw.updateConfig(updatedData);
-            if (WEBIMAGES) this.images = await draw.getAllViewsAsImages();
+            if (true) this.images = await draw.getAllViewsAsImages();
         });
 
         this.http.use('/api', apiRouter);
-
-        if (serveWebUi) {
-            this.http.use(express.static(path.join(__dirname, '../', 'webDist')));
-            this.http.get('*path', (req, res) => {
-                console.log('Serving web ui' + __dirname);
-                console.log('Serving web ui' + path.join(__dirname, '../', 'webDist', 'index.html'));
-                const manualPath = path.join(__dirname, '../', 'webDist', 'index.html');
-                readFile(manualPath).then((data) => {
-                    console.log('File: ' + data.toString());
-                }).catch((err) => {
-                    console.log('Serving web ui' + err);
-                });
-                res.sendFile(path.join(__dirname, '../', 'webDist', 'index.html'));
-            });
-        }
     }
 
-    async listen(port: number, serveWebUi: boolean): Promise<void> {
-        this.registerRoutes(serveWebUi);
+    async listen(port: number): Promise<void> {
+        this.registerRoutes();
 
         return new Promise((resolve) => {
             this.http.listen(port, () => resolve());

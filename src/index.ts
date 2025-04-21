@@ -1,29 +1,39 @@
 import { initDataSources, stopDataSources } from './dataSources/dataUtil';
-import { initialize as initDisplay, stopDisplay } from './display';
-import { draw } from './ui/Draw';
-import { runningOnPi } from './utils';
+// import { initialize as initDisplay, stopDisplay } from './display';
+// import { draw } from './ui/Draw';
+import { env } from './env';
 import { webServer } from './webServer';
 
 const webPort = 3000;
 
 const initialize = async (): Promise<void> => {
-    const useHardware = await runningOnPi();
-    if (!useHardware) {
-        console.log('Not running on a Raspberry Pi, running emulated display and data sources');
-    }
-    const serveWebUi = true;
-
     // Init display separately first as it has a risk of crashing the whole process if the user
     // can't access the display spi device / IO ports
-    await initDisplay(useHardware);
+    // await initDisplay(useHardware);
+    await env.loadenv();
 
-    const webPromise = webServer.listen(webPort, serveWebUi).then(() => {
+    const webPromise = webServer.listen(webPort).then(() => {
         console.log(`HTTP server running on ${webPort}`);
+        
+        if (false) {
+            console.log('Serving web UI');
+            webServer.serveWebUi();
+        }
     });
 
-    const initPromises = [initDataSources(), draw.readyPromise, webPromise];
+    const initPromises = [initDataSources(), webPromise];
 
     await Promise.all(initPromises);
+};
+
+const shutdown = async (): Promise<void> => {
+    console.log('\nShutting down');
+
+    // await stopDisplay();
+    await stopDataSources();
+
+    console.log('Exiting');
+    process.exit();
 };
 
 initialize()
@@ -35,15 +45,6 @@ initialize()
         console.error(error);
     });
 
-const shutdown = async (): Promise<void> => {
-    console.log('\nShutting down');
-
-    // await stopDisplay();
-    await stopDataSources();
-
-    console.log('Exiting');
-    process.exit();
-};
 
 process.on('beforeExit', (code) => {
     console.log('Node event loop is empty causing process to exit with code:', code);
@@ -65,7 +66,12 @@ const signals: NodeJS.Signals[] = [
 
 for (const signal of signals) {
     process.on(signal, () => {
-        shutdown().catch(console.error);
+        console.log(`Received ${signal}, shutting down...`);
+        shutdown().catch((error) => {
+            console.error(error);
+            console.error('Failed to shutdown gracefully');
+            process.exit(1);
+        });
     });
 }
 
@@ -78,9 +84,13 @@ process.on('uncaughtException', (error) => {
     }
     uncaughtExceptionHappened = true;
     // Make sure to close everything critical and exit immediately
-    // Should not be used in a async way but it it's still possible so
-    // try once to close everything and then exit
+    // Docs says that this async shouldn't be used anymore in uncaughtException,
+    // but nothing really prevents it so lets try anyway to close anything possible
     console.error(error);
-    console.error('Uncaught exception happened, trying to close everything and exit');
-    shutdown().catch(console.error);
+    console.error('Uncaught exception happened, trying to close everything and exit\nPower might be left on on hardware modules');
+    shutdown().catch((newError) => {
+        console.error(newError);
+        console.error('Failed to shutdown gracefully');
+        process.exit(1);
+    });
 });

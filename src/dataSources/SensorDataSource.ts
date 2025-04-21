@@ -1,10 +1,11 @@
 import * as fs from 'node:fs/promises';
 
-import { DEV } from '../env';
+import { env } from '../env';
 import { co2Sensor } from './sensors/CO2Sensor';
 import { envSensor } from './sensors/EnvSensor';
 import { fakeCo2Sensor } from './sensors/FakeCO2Sensor';
 import { fakeEnvSensor } from './sensors/FakeEnvSensor';
+
 
 const OFFSET = 200;
 
@@ -19,18 +20,20 @@ export type SensorDataType = {
 class SensorDataSource {
     latestData?: SensorDataType;
     private sensorHistory: SensorDataType[];
-    readyPromise: Promise<unknown>;
     dataLoopTimeout?: NodeJS.Timeout;
     thinDataInterval?: NodeJS.Timeout;
 
     constructor() {
         this.sensorHistory = [];
 
-        this.readyPromise = DEV
-            ? this.writeFakeData().then(async () => {
-                  await this.readDataFromFile();
-              })
-            : this.readDataFromFile();
+    }
+
+    async init(): Promise<void> {
+        return env.EMULATED_HARDWARE
+        ? this.writeFakeData().then(async () => {
+              await this.readDataFromFile();
+          })
+        : this.readDataFromFile();
     }
 
     async start(): Promise<void> {
@@ -228,7 +231,7 @@ class SensorDataSource {
     }
 
     private async readSensorData(timestamp: Date): Promise<void> {
-        const promise = DEV
+        const promise = env.EMULATED_HARDWARE
             ? Promise.all([fakeCo2Sensor.getData(), fakeEnvSensor.getData()])
             : Promise.all([co2Sensor.getData(), envSensor.getData()]);
         await promise

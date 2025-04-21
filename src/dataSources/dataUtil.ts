@@ -2,7 +2,7 @@ import { sensorDataSource } from './SensorDataSource';
 import { weatherDataSource } from './weatherDataSource';
 
 export const initDataSources = async (): Promise<unknown> =>
-    Promise.all([sensorDataSource.readyPromise, weatherDataSource.readyPromise]);
+    Promise.all([sensorDataSource.init(), weatherDataSource.readyPromise]);
 
 export const startDataSources = async (): Promise<unknown> =>
     Promise.all([sensorDataSource.start(), weatherDataSource.start()]);

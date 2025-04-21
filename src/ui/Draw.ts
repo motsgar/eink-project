@@ -12,18 +12,20 @@ import { TemperatureGraph } from './modules/Temperature';
 import { Weather } from './modules/Weather';
 import { WeatherGraph } from './modules/WeatherGraph';
 import { type Config, ConfigSchema } from '../../web/src/schema';
-import { DEV } from '../env';
+import { env } from '../env';
 import { resolveBinaryPath } from '../utils';
 
 class Draw {
     private viewIndex = 0;
     private modules: EInkModule[][];
     private config?: Config;
-    readyPromise: Promise<unknown>;
 
     constructor() {
         this.modules = [];
-        this.readyPromise = Promise.all([
+    }
+
+    async init(): Promise<unknown> {
+        return Promise.all([
             resolveBinaryPath('convert'),
             this.loadConfig().then(async () => {
                 await this.loadModules();
@@ -231,7 +233,7 @@ class Draw {
         console.log(`Drawing current view (index: ${this.viewIndex})`);
         const canvas = await this.drawViewCanvas(this.viewIndex);
 
-        if (DEV) {
+        if (env.EMULATED_HARDWARE) {
             // Save the canvas as a PNG file
             const filename = `view-${this.viewIndex}.png`;
             const out = createWriteStream(filename);

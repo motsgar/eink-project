@@ -1,6 +1,6 @@
 import bme280, { type Sensor } from 'bme280';
 
-import { DEV } from '../../env';
+import { env } from '../../env';
 
 export type EnvData = {
     temperature: number;
@@ -13,7 +13,7 @@ class EnvSensor {
     private sensor?: Sensor;
 
     async start(): Promise<void> {
-        if (DEV) return;
+        if (env.EMULATED_HARDWARE) return;
         await bme280
             .open({
                 i2cAddress: 0x76,
@@ -28,7 +28,7 @@ class EnvSensor {
     }
 
     async stop(): Promise<void> {
-        if (DEV) return;
+        if (env.EMULATED_HARDWARE) return;
         await this.sensor?.close();
         this.sensor = undefined;
     }

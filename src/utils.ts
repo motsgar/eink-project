@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 
-import { PATH } from './env';
+import { env } from './env';
 
 /**
  * A typeguarded version of `instanceof Error` for NodeJS.
@@ -32,7 +32,7 @@ export const getResolvedPath = (command: string): string => {
 export const resolveBinaryPath = async (command: string): Promise<string> => {
     let eaccessHappened = false;
 
-    const directories = PATH.split(':');
+    const directories = env.PATH.split(':');
     for (const directory of directories) {
         if (directory === '') continue;
 
