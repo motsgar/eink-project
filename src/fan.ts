@@ -29,7 +29,6 @@ export default class Fan {
 
             this.tach.on('alert', this.tachAlert.bind(this));
 
-
             this.pulseCount = 0;
             this.tachCountStartTime = process.hrtime.bigint();
             this.tachInterval = setInterval(() => {
@@ -51,7 +50,6 @@ export default class Fan {
             this.pwm = null;
         }
         if (this.tach) {
-            // Stop the tachometer
             this.tach.removeAllListeners('alert');
             this.tach = null;
         }
@@ -64,8 +62,11 @@ export default class Fan {
     };
 
     setSpeed(speed: number): void {
+        if (speed < 0 || speed > 100) {
+            throw new RangeError(`Invalid speed: ${speed}, must be between 0 and 100`);
+        }
+        this.speed = speed;
         if (this.pwm) {
-            this.speed = speed;
             const dutyCycle = Math.round((speed / 100) * 1_000_000);
             this.pwm.hardwarePwmWrite(25_000, dutyCycle);
         }

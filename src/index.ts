@@ -16,10 +16,8 @@ const initialize = async (): Promise<void> => {
     const webPromise = webServer.listen(webPort).then(() => {
         console.log(`HTTP server running on ${webPort}`);
         
-        if (false) {
-            console.log('Serving web UI');
-            webServer.serveWebUi();
-        }
+        // console.log('Serving web UI');
+        // webServer.serveWebUi();
     });
 
     const initPromises = [initDataSources(), fan.init(), webPromise];
@@ -27,25 +25,41 @@ const initialize = async (): Promise<void> => {
     await Promise.all(initPromises);
 };
 
+let isShuttingDown = false;
 const shutdown = async (): Promise<void> => {
-    console.log('\nShutting down');
+    if (isShuttingDown) {
+        console.log('Already shutting down, ignoring signal');
+        return;
+    }
+    isShuttingDown = true;
+    const forceShutdownTimeout = setTimeout(() => {
+        console.log('10 second timeout reached. Forcefully shutting down');
+        process.exit(1);
+    }, 10_000);
 
     // await stopDisplay();
     await stopDataSources();
+    console.log('Data sources stopped');
+    await webServer.close();
+    console.log('Web server closed');
+    fan.stop();
 
-    process.exit();
+    clearTimeout(forceShutdownTimeout);
+    console.log('Shutdown complete');
+    process.exit(0);
 };
 
 initialize()
     .then(() => {
         console.log('Initialized');
         setInterval(() => {
-            console.log('fan speed:', fan.getSpeed());
+            console.log(`fan speed: ${fan.getRpm()} rpm`);
         }, 1000);
     })
     .catch((error) => {
         console.error('Failed to initialize');
         console.error(error);
+        process.exit(1);
     });
 
 

@@ -1,15 +1,16 @@
 import bodyParser from 'body-parser';
 import express, { type Express } from 'express';
 import { readFile } from 'node:fs/promises';
+import type { Server } from 'node:http';
 import path from 'node:path';
 
-import { env } from './env';
 import { draw } from './ui/Draw';
 import { ConfigSchema } from '../web/src/schema';
 
 export default class WebServer {
     private http: Express;
     private images: Buffer[];
+    private server: Server | null = null;
 
     constructor() {
         this.images = [];
@@ -79,7 +80,7 @@ export default class WebServer {
 
             // TODO make sure module loaded
             await draw.updateConfig(updatedData);
-            if (true) this.images = await draw.getAllViewsAsImages();
+            this.images = await draw.getAllViewsAsImages();
         });
 
         this.http.use('/api', apiRouter);
@@ -89,7 +90,20 @@ export default class WebServer {
         this.registerRoutes();
 
         return new Promise((resolve) => {
-            this.http.listen(port, () => resolve());
+            this.server = this.http.listen(port, () => resolve());
+        });
+    }
+
+    async close(): Promise<void> {
+        return new Promise((resolve) => {
+            if (this.server) {
+                this.server.close(() => {
+                    this.server = null;
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
         });
     }
 }
