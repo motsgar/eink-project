@@ -19,6 +19,7 @@ raw_libraries=(
     libgif.so.7
     librsvg-2.so.2
     libharfbuzz.so.0
+    libpigpio.so.1
 )
 
 libraries=()
