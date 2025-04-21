@@ -7,23 +7,6 @@ import { webServer } from './webServer';
 
 const webPort = 3000;
 
-const initialize = async (): Promise<void> => {
-    // Init display separately first as it has a risk of crashing the whole process if the user
-    // can't access the display spi device / IO ports
-    // await initDisplay(useHardware);
-    await env.loadenv();
-
-    const webPromise = webServer.listen(webPort).then(() => {
-        console.log(`HTTP server running on ${webPort}`);
-        
-        // console.log('Serving web UI');
-        // webServer.serveWebUi();
-    });
-
-    const initPromises = [initDataSources(), fan.init(), webPromise];
-
-    await Promise.all(initPromises);
-};
 
 let isShuttingDown = false;
 const shutdown = async (): Promise<void> => {
@@ -43,11 +26,65 @@ const shutdown = async (): Promise<void> => {
     await webServer.close();
     console.log('Web server closed');
     fan.stop();
+    console.log('Fan stopped');
 
     clearTimeout(forceShutdownTimeout);
     console.log('Shutdown complete');
     process.exit(0);
 };
+
+const setSignalHandlers = (): void => {
+    // https://nodejs.org/api/process.html#signal-events
+    // Adding listeners for all signals that can be caught by Node.js
+    // and that would cause the process to exit
+    const signals: NodeJS.Signals[] = [
+        'SIGINT',
+        'SIGHUP',
+        'SIGQUIT',
+        'SIGTERM',
+    ];
+
+    const signalHandler = (signal: NodeJS.Signals) => {
+        console.log(`\nReceived ${signal}, shutting down...`);
+        shutdown().catch((error) => {
+            console.error(error);
+            console.error('Failed to shutdown gracefully');
+            process.exit(1);
+        });
+    };
+
+    for (const signal of signals) {
+        // Remove any existing listeners for the signal to ensure only one handler is active
+        process.removeAllListeners(signal);
+        process.on(signal, signalHandler);
+    }
+
+    console.log('Signal handlers reset and registered');
+};
+
+const initialize = async (): Promise<void> => {
+    // Init display separately first as it has a risk of crashing the whole process if the user
+    // can't access the display spi device / IO ports
+    // await initDisplay(useHardware);
+    await env.loadenv();
+
+    const webPromise = webServer.listen(webPort).then(() => {
+        console.log(`HTTP server running on ${webPort}`);
+        
+        // console.log('Serving web UI');
+        // webServer.serveWebUi();
+    });
+
+    const initPromises = [initDataSources(), fan.init().then(() => {
+        // This stupid pigpio library that is used for fan control overrides all signals to terminate the
+        // program but as a hack resetting signal handlers overrides them back to actually handle graceful shutdown
+        setSignalHandlers();
+    }), webPromise];
+
+    await Promise.all(initPromises);
+};
+
+setSignalHandlers();
 
 initialize()
     .then(() => {
@@ -70,27 +107,6 @@ process.on('beforeExit', (code) => {
 process.on('exit', (code) => {
     console.log('Process exit event with code:', code);
 });
-
-// https://nodejs.org/api/process.html#signal-events
-// Adding listeners for all signals that can be caught by Node.js
-// and that would cause the process to exit
-const signals: NodeJS.Signals[] = [
-    'SIGINT',
-    'SIGHUP',
-    'SIGQUIT',
-    'SIGTERM',
-];
-
-for (const signal of signals) {
-    process.on(signal, () => {
-        console.log(`\nReceived ${signal}, shutting down...`);
-        shutdown().catch((error) => {
-            console.error(error);
-            console.error('Failed to shutdown gracefully');
-            process.exit(1);
-        });
-    });
-}
 
 let uncaughtExceptionHappened = false;
 process.on('uncaughtException', (error) => {

@@ -9,20 +9,13 @@ wget -O linuxdeploy-plugin-checkrt.sh https://github.com/darealshinji/linuxdeplo
 # Patch the checkrt plugin to not crach if a user tries to run the appimage when it has a space character in its name
 patch < linuxdeploy-plugin-checkrt.patch
 
+# Patch the appimage to remove "magic bytes" that qemu thinks is a wrong binary format and doesn't execute in docker
+sed -i 's|AI\x02|\x00\x00\x00|' linuxdeploy.AppImage
+
 chmod +x linuxdeploy.AppImage
 chmod +x linuxdeploy-plugin-checkrt.sh
 
-if [ "$ARCH" == "aarch64" ]; then
-    echo "Installing qemu-user-static for aarch64"
-    apt-get install -y qemu-user-static binfmt-support
-    update-binfmts --enable qemu-aarch64
-    qemu-aarch64-static ./linuxdeploy.AppImage --appimage-extract
-    update-binfmts --disable qemu-aarch64
-    apt-get remove -y qemu-user-static binfmt-support
-else
-    echo "using native architecture"
-    ./linuxdeploy.AppImage --appimage-extract
-fi
+./linuxdeploy.AppImage --appimage-extract
 rm linuxdeploy.AppImage
 
 mv squashfs-root /opt/linuxdeploy

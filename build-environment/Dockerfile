@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ghcr.io/motsgar/raspbian-docker:bookworm
 
 WORKDIR /app
 ENV DEBIAN_FRONTEND=noninteractive
@@ -36,6 +36,8 @@ RUN apt-get install -y \
     libgif-dev \
     librsvg2-dev \
     imagemagick \
+    libpigpio-dev \
+    pigpiod \
     python3
 
 # Create home directory for node stuff really doesn't like running without one
