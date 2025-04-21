@@ -4,7 +4,7 @@ set -e
 ARCH=$(uname -m)
 wget -O linuxdeploy.AppImage https://github.com/motsgar/linuxdeploy-plugin-argv0-fix/releases/download/continuous/linuxdeploy-${ARCH}.AppImage
 wget -O appimage-type2-runtime https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-${ARCH}
-wget -O linuxdeploy-plugin-checkrt.sh https://github.com/darealshinji/linuxdeploy-plugin-checkrt/releases/download/continuous/linuxdeploy-plugin-checkrt.sh
+wget -O linuxdeploy-plugin-checkrt.sh https://github.com/darealshinji/linuxdeploy-plugin-checkrt/releases/download/r1/linuxdeploy-plugin-checkrt.sh
 
 # Patch the checkrt plugin to not crach if a user tries to run the appimage when it has a space character in its name
 patch < linuxdeploy-plugin-checkrt.patch

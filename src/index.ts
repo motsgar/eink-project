@@ -66,7 +66,7 @@ const signals: NodeJS.Signals[] = [
 
 for (const signal of signals) {
     process.on(signal, () => {
-        console.log(`Received ${signal}, shutting down...`);
+        console.log(`\nReceived ${signal}, shutting down...`);
         shutdown().catch((error) => {
             console.error(error);
             console.error('Failed to shutdown gracefully');

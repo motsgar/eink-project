@@ -15,7 +15,7 @@ export default class Env {
         if (!runningOnHardware) {
             console.log('Not running on a Raspberry Pi, running emulated display and data sources');
         }
-        this.EMULATED_HARDWARE = runningOnHardware;
+        this.EMULATED_HARDWARE = runningOnHardware || process.env.EMULATED_HARDWARE === 'true';
         this.PATH = process.env.PATH ?? '/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin';
         
         if (process.env.DISPLAY_VOLTAGE !== undefined) {
@@ -23,10 +23,10 @@ export default class Env {
 
             // Arbitrary voltage limits
             if (isNaN(this.DISPLAY_VOLTAGE) || this.DISPLAY_VOLTAGE < -5 || this.DISPLAY_VOLTAGE > 0) {
-                throw new Error(`Invalid voltage: "${process.env.DISPLAY_VOLTAGE}", must be a float between -5 and 0`);
+                throw new Error(`Invalid voltage: "${process.env.DISPLAY_VOLTAGE}", DISPLAY_VOLTAGE must be a float between -5 and 0`);
             }
         } else {
-            if (runningOnHardware) throw new Error(`Invalid voltage: "${process.env.DISPLAY_VOLTAGE}", must be a float between -5 and 0`);
+            if (runningOnHardware) throw new Error('DISPLAY_VOLTAGE is required when running on hardware or when EMULATED_HARDWARE is not set');
             else console.log('Allowing env DISPLAY_VOLTAGE to be undefined in emulated mode');
         }
         
