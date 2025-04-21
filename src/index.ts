@@ -33,30 +33,31 @@ const shutdown = async (): Promise<void> => {
     process.exit(0);
 };
 
+const signals: NodeJS.Signals[] = [
+    'SIGINT',
+    'SIGHUP',
+    'SIGQUIT',
+    'SIGTERM',
+];
+
+const shutdownSignalHandler = (signal: NodeJS.Signals): void => {
+    console.log(`\nReceived ${signal}, shutting down...`);
+    shutdown().catch((error) => {
+        console.error(error);
+        console.error('Failed to shutdown gracefully');
+        process.exit(1);
+    });
+};
+
 const setSignalHandlers = (): void => {
     // https://nodejs.org/api/process.html#signal-events
     // Adding listeners for all signals that can be caught by Node.js
     // and that would cause the process to exit
-    const signals: NodeJS.Signals[] = [
-        'SIGINT',
-        'SIGHUP',
-        'SIGQUIT',
-        'SIGTERM',
-    ];
-
-    const signalHandler = (signal: NodeJS.Signals) => {
-        console.log(`\nReceived ${signal}, shutting down...`);
-        shutdown().catch((error) => {
-            console.error(error);
-            console.error('Failed to shutdown gracefully');
-            process.exit(1);
-        });
-    };
 
     for (const signal of signals) {
         // Remove any existing listeners for the signal to ensure only one handler is active
         process.removeAllListeners(signal);
-        process.on(signal, signalHandler);
+        process.on(signal, shutdownSignalHandler);
     }
 
     console.log('Signal handlers reset and registered');

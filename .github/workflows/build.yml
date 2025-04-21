@@ -21,6 +21,7 @@ jobs:
 
       - name: Build build container
         run: |
+          docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
           docker buildx create --use
           docker buildx build --platform linux/aarch64 \
             -t local-build-container:latest \
