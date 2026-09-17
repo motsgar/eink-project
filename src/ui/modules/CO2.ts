@@ -1,18 +1,21 @@
 import 'chartjs-adapter-moment';
+import type { Canvas } from 'canvas';
+import type { ScriptableScaleContext } from 'chart.js';
 
-import { type Canvas, createCanvas } from 'canvas';
-import { Chart, type ScriptableScaleContext, registerables } from 'chart.js';
+import { createCanvas } from 'canvas';
+import { Chart, registerables } from 'chart.js';
 
-import { EInkModule } from './EInkModule';
 import type { ModuleSettings } from '../../../web/src/schema';
+
 import { sensorDataSource } from '../../dataSources/SensorDataSource';
+import { EInkModule } from './EInkModule';
 
 export class CO2Graph extends EInkModule {
-    timePeriod: number; // minutes
-    detailedSensorData: boolean;
-    chartInstance?: Chart;
+    private readonly timePeriod: number; // Minutes
+    private readonly detailedSensorData: boolean;
+    private chartInstance?: Chart;
 
-    constructor(settings: ModuleSettings) {
+    public constructor(settings: ModuleSettings) {
         super(settings);
 
         const defaultTimePeriod = 3 * 60;
@@ -20,22 +23,22 @@ export class CO2Graph extends EInkModule {
         this.detailedSensorData = settings.detailedSensorData ?? false;
     }
 
-    draw(width: number, height: number): Canvas {
+    public draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
-        const sensorData_ = sensorDataSource.getSensorData(this.timePeriod * 60, this.detailedSensorData);
+        const sensorData = sensorDataSource.getSensorData(this.timePeriod * 60, this.detailedSensorData);
 
         // Cause gaps in missing data
-        for (let i = 1; i < sensorData_.length; i++) {
-            const timeDiff = sensorData_[i].timestamp.getTime() - sensorData_[i - 1].timestamp.getTime();
+        for (let i = 1; i < sensorData.length; i++) {
+            const timeDiff = sensorData[i].timestamp.getTime() - sensorData[i - 1].timestamp.getTime();
             if (timeDiff > 2 * 60 * 1000) {
-                sensorData_[i].co2 = NaN;
+                sensorData[i].co2 = Number.NaN;
             }
         }
 
         const data = {
-            labels: sensorData_.map(({ timestamp }) => timestamp),
-            datasets: [{ data: sensorData_.map(({ co2 }) => co2) }],
+            labels: sensorData.map(({ timestamp }) => timestamp),
+            datasets: [{ data: sensorData.map(({ co2 }) => co2) }],
         };
         Chart.register(...registerables);
         if (this.chartInstance !== undefined) {
@@ -43,7 +46,7 @@ export class CO2Graph extends EInkModule {
         }
         this.chartInstance = new Chart(ctx, {
             type: 'line',
-            data: data,
+            data,
             options: {
                 elements: {
                     point: { radius: 0 },
@@ -69,11 +72,13 @@ export class CO2Graph extends EInkModule {
                             font: {
                                 size: 25,
                                 weight: (context: ScriptableScaleContext | { tick: undefined }) =>
+                                    // oxlint-disable-next-line typescript/strict-boolean-expressions
                                     context.tick?.major ? 'bold' : 'normal',
                             },
                         },
                         grid: {
                             color: (context: ScriptableScaleContext | { tick: undefined }) =>
+                                // oxlint-disable-next-line typescript/strict-boolean-expressions
                                 context.tick?.major || this.timePeriod < 12 * 60 ? '#333333' : '#ffffff00',
                         },
                     },

@@ -1,7 +1,11 @@
-import { ENDIANNESS, IMAGE_ROTATION, IT8951, type PIXEL_PACKING, type SystemInfo, WAVEFORM } from 'it8951';
+import type { PIXEL_PACKING, SystemInfo } from 'it8951';
+
+import { ENDIANNESS, IMAGE_ROTATION, IT8951, WAVEFORM } from 'it8951';
 import { parentPort as _parentPort } from 'node:worker_threads';
 
-import { DisplayOperationError, type FromWorkerMessage, type ToWorkerMessage } from './displayWorkerMessageTypes';
+import type { FromWorkerMessage, ToWorkerMessage } from './displayWorkerMessageTypes';
+
+import { DisplayOperationError } from './displayWorkerMessageTypes';
 import { env } from './env';
 
 if (_parentPort === null) {
@@ -15,7 +19,7 @@ let enabled = false;
 
 const initialize = (): void => {
     const vcom = -env.DISPLAY_VOLTAGE * 1000;
-    
+
     screen = new IT8951(vcom);
     console.log('worker screen initialize start');
     screenInfo = screen.systemInfo();
@@ -31,9 +35,11 @@ const enable = async (): Promise<void> => {
     if (enabled) return;
     enabled = true;
 
+    // Debug log
     // console.log('worker screen run start');
     screen.run();
     await screen.waitForDisplayReady();
+    // Debug log
     // console.log('worker screen run end');
 };
 
@@ -56,6 +62,7 @@ const displayArea = (x: number, y: number, width: number, height: number, mode: 
     if (!enabled) {
         throw new DisplayOperationError('Display not enabled');
     }
+    // oxlint-disable-next-line typescript/no-non-null-assertion
     if (x < 0 || y < 0 || x + width > screenInfo!.width || y + height > screenInfo!.height) {
         throw new DisplayOperationError(`Draw area outside of display: (${x}, ${y}) - (${x + width}, ${y + height})`);
     }
@@ -84,6 +91,7 @@ const writePixels = (
     if (!enabled) {
         throw new DisplayOperationError('Display not enabled');
     }
+    // oxlint-disable-next-line typescript/no-non-null-assertion
     if (x < 0 || y < 0 || x + width > screenInfo!.width || y + height > screenInfo!.height) {
         throw new DisplayOperationError(`Write area outside of display: (${x}, ${y}) - (${x + width}, ${y + height})`);
     }

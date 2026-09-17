@@ -12,10 +12,10 @@ type FakeEnvData = {
 };
 
 class FakeEnvSensor {
-    data: EnvData;
-    private fakeData: FakeEnvData;
+    private readonly data: EnvData;
+    private readonly fakeData: FakeEnvData;
 
-    constructor() {
+    public constructor() {
         this.data = {
             temperature: 19,
             humidity: 50,
@@ -28,7 +28,7 @@ class FakeEnvSensor {
         };
     }
 
-    private nextValue(fakeData: FakeData): number {
+    private static nextValue(fakeData: FakeData): number {
         const range = fakeData.max - fakeData.min;
         const half = (fakeData.max + fakeData.min) / 2;
         const step = (fakeData.max - fakeData.min) / 2000;
@@ -45,23 +45,25 @@ class FakeEnvSensor {
         return fakeData.value;
     }
 
-    getFakeData(amount: number): EnvData[] {
+    public getFakeData(amount: number): EnvData[] {
         const data = [];
         for (let i = 0; i < amount; i++) {
-            this.data.temperature = this.nextValue(this.fakeData.temperature);
-            this.data.humidity = this.nextValue(this.fakeData.humidity);
-            this.data.pressure = this.nextValue(this.fakeData.pressure);
+            this.data.temperature = FakeEnvSensor.nextValue(this.fakeData.temperature);
+            this.data.humidity = FakeEnvSensor.nextValue(this.fakeData.humidity);
+            this.data.pressure = FakeEnvSensor.nextValue(this.fakeData.pressure);
             data.push({ ...this.data });
         }
         return data;
     }
 
-    async getData(): Promise<EnvData> {
-        await new Promise((resolve) => setTimeout(resolve, 100));
+    public async getData(): Promise<EnvData> {
+        await new Promise((resolve) => {
+            setTimeout(resolve, 100);
+        });
 
-        this.data.temperature = this.nextValue(this.fakeData.temperature);
-        this.data.humidity = this.nextValue(this.fakeData.humidity);
-        this.data.pressure = this.nextValue(this.fakeData.pressure);
+        this.data.temperature = FakeEnvSensor.nextValue(this.fakeData.temperature);
+        this.data.humidity = FakeEnvSensor.nextValue(this.fakeData.humidity);
+        this.data.pressure = FakeEnvSensor.nextValue(this.fakeData.pressure);
         return this.data;
     }
 }

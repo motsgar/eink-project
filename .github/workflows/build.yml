@@ -1,76 +1,76 @@
 name: CI with Raspberry Pi-Compatible Build Environment
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+    push:
+        branches:
+            - main
+    pull_request:
 
 jobs:
-  build-and-package:
-    runs-on: ubuntu-latest
+    build-and-package:
+        runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-      packages: read
+        permissions:
+            contents: write
+            packages: read
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Get version from VERSION.txt
-        id: get_version
-        run: |
-          VERSION=$(cat VERSION.txt | tr -d '[:space:]')
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+            - name: Get version from VERSION.txt
+              id: get_version
+              run: |
+                  VERSION=$(cat VERSION.txt | tr -d '[:space:]')
+                  echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Check if release exists
-        id: check_release
-        run: |
-          RELEASE_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.get_version.outputs.VERSION }}")
-          
-          if [ "$RELEASE_EXISTS" = "200" ]; then
-            echo "RELEASE_EXISTS=true" >> $GITHUB_OUTPUT
-            echo "Release ${{ steps.get_version.outputs.VERSION }} already exists. Skipping build and release."
-          else
-            echo "RELEASE_EXISTS=false" >> $GITHUB_OUTPUT
-            echo "Release ${{ steps.get_version.outputs.VERSION }} does not exist. Proceeding with build and release."
-          fi
+            - name: Check if release exists
+              id: check_release
+              run: |
+                  RELEASE_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
+                    -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                    "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.get_version.outputs.VERSION }}")
 
-      - name: Setup QEMU
-        if: steps.check_release.outputs.RELEASE_EXISTS != 'true'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: aarch64
+                  if [ "$RELEASE_EXISTS" = "200" ]; then
+                    echo "RELEASE_EXISTS=true" >> $GITHUB_OUTPUT
+                    echo "Release ${{ steps.get_version.outputs.VERSION }} already exists. Skipping build and release."
+                  else
+                    echo "RELEASE_EXISTS=false" >> $GITHUB_OUTPUT
+                    echo "Release ${{ steps.get_version.outputs.VERSION }} does not exist. Proceeding with build and release."
+                  fi
 
-      - name: Build build container
-        if: steps.check_release.outputs.RELEASE_EXISTS != 'true'
-        run: |
-          cp package.json yarn.lock build-environment/
-          docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-          
-          docker buildx create --use
-          docker buildx build --platform linux/aarch64 \
-            -t local-build-container:latest \
-            ./build-environment --load
+            - name: Setup QEMU
+              if: steps.check_release.outputs.RELEASE_EXISTS != 'true'
+              uses: docker/setup-qemu-action@v3
+              with:
+                  platforms: aarch64
 
-      - name: Build and package inside build container
-        if: steps.check_release.outputs.RELEASE_EXISTS != 'true'
-        uses: addnab/docker-run-action@v3
-        with:
-          image: local-build-container:latest
-          options: --rm -v ${{ github.workspace }}:/app -w /app --platform linux/aarch64
-          run: |
-            appimageBuild/all.sh
+            - name: Build build container
+              if: steps.check_release.outputs.RELEASE_EXISTS != 'true'
+              run: |
+                  cp package.json yarn.lock build-environment/
+                  docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Release eink.AppImage
-        if: steps.check_release.outputs.RELEASE_EXISTS != 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: eink.AppImage
-          name: Eink AppImage
-          tag_name: ${{ steps.get_version.outputs.VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  docker buildx create --use
+                  docker buildx build --platform linux/aarch64 \
+                    -t local-build-container:latest \
+                    ./build-environment --load
+
+            - name: Build and package inside build container
+              if: steps.check_release.outputs.RELEASE_EXISTS != 'true'
+              uses: addnab/docker-run-action@v3
+              with:
+                  image: local-build-container:latest
+                  options: --rm -v ${{ github.workspace }}:/app -w /app --platform linux/aarch64
+                  run: |
+                      appimageBuild/all.sh
+
+            - name: Release eink.AppImage
+              if: steps.check_release.outputs.RELEASE_EXISTS != 'true'
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: eink.AppImage
+                  name: Eink AppImage
+                  tag_name: ${{ steps.get_version.outputs.VERSION }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

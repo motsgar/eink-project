@@ -1,35 +1,38 @@
-import { type Canvas, Image, createCanvas } from 'canvas';
+import type { Canvas } from 'canvas';
+
+import { Image, createCanvas } from 'canvas';
 import { createWriteStream } from 'node:fs';
 import * as fs from 'node:fs/promises';
 
+import type { Config } from '../../web/src/schema';
+import type { EInkModule } from './modules/EInkModule';
+
+import { ConfigSchema } from '../../web/src/schema';
+import { env } from '../env';
+import { resolveBinaryPath } from '../utils';
 import { ditherImage } from './ditherImage';
 import { CO2Graph } from './modules/CO2';
-import type { EInkModule } from './modules/EInkModule';
 import { EnvGraph } from './modules/EnvGraph';
 import { HorizontalWeather } from './modules/HorizontalWeather';
 import { Status } from './modules/Status';
 import { TemperatureGraph } from './modules/Temperature';
 import { Weather } from './modules/Weather';
 import { WeatherGraph } from './modules/WeatherGraph';
-import { type Config, ConfigSchema } from '../../web/src/schema';
-import { env } from '../env';
-import { resolveBinaryPath } from '../utils';
 
 class Draw {
     private viewIndex = 0;
-    private modules: EInkModule[][];
+    private readonly modules: EInkModule[][];
     private config?: Config;
 
-    constructor() {
+    public constructor() {
         this.modules = [];
     }
 
-    async init(): Promise<unknown> {
+    public async init(): Promise<unknown> {
         return Promise.all([
             resolveBinaryPath('convert'),
-            this.loadConfig().then(async () => {
-                await this.loadModules();
-            }),
+            // oxlint-disable-next-line promise/prefer-await-to-then
+            this.loadConfig().then(async () => this.loadModules()),
         ]);
     }
 
@@ -37,7 +40,7 @@ class Draw {
         const dataBuffer = await fs.readFile('config.json');
         const result = ConfigSchema.safeParse(JSON.parse(dataBuffer.toString()));
         if (!result.success) {
-            const errors = result.error.errors.map((error) => `    [${error.path.join('/')}]: ${error.message}`);
+            const errors = result.error.issues.map((error) => `    [${error.path.join('/')}]: ${error.message}`);
             throw new Error(`Tried to load invalid config.json: [\n${errors.join('\n')}\n]`);
         }
         this.config = result.data;
@@ -93,7 +96,7 @@ class Draw {
         console.log('Awaiting module readyPromises finished');
     }
 
-    async updateConfig(newConfig: Config): Promise<void> {
+    public async updateConfig(newConfig: Config): Promise<void> {
         console.log('\nReceived new config. Resetting back to view 0');
         await fs.writeFile('config.json', JSON.stringify(newConfig));
         this.config = newConfig;
@@ -102,7 +105,7 @@ class Draw {
         await this.drawCurrentView();
     }
 
-    async changeView(indexDiff: number): Promise<void> {
+    public async changeView(indexDiff: number): Promise<void> {
         if (this.config === undefined) {
             throw new Error('Draw.changeView() was called before the config was loaded');
         }
@@ -175,7 +178,7 @@ class Draw {
         return moduleCanvas;
     }
 
-    async drawViewCanvas(viewIndex: number): Promise<Canvas> {
+    public async drawViewCanvas(viewIndex: number): Promise<Canvas> {
         if (this.config === undefined) {
             throw new Error('Tried to call drawCanvas without waiting for config to be loaded');
         }
@@ -214,7 +217,7 @@ class Draw {
         return canvas;
     }
 
-    async getAllViewsAsImages(): Promise<Buffer[]> {
+    public async getAllViewsAsImages(): Promise<Buffer[]> {
         console.log('Generating all views as images');
         if (this.config === undefined) {
             throw new Error('Tried to call getAllViewsAsCanvas without waiting for config to be loaded');
@@ -222,6 +225,8 @@ class Draw {
 
         const views: Buffer[] = [];
         for (let i = 0; i < this.config.views.length; i++) {
+            // TODO: Parallelize
+            // oxlint-disable-next-line no-await-in-loop
             const canvas = await this.drawViewCanvas(i);
             views.push(canvas.toBuffer('image/png'));
         }
@@ -229,7 +234,7 @@ class Draw {
         return views;
     }
 
-    async drawCurrentView(): Promise<void> {
+    public async drawCurrentView(): Promise<void> {
         console.log(`Drawing current view (index: ${this.viewIndex})`);
         const canvas = await this.drawViewCanvas(this.viewIndex);
 

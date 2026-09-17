@@ -1,12 +1,10 @@
+// oxlint-disable unicorn/no-process-exit
 import { initDataSources, stopDataSources } from './dataSources/dataUtil';
-// import { initialize as initDisplay, stopDisplay } from './display';
-// import { draw } from './ui/Draw';
 import { env } from './env';
 import { fan } from './fan';
 import { webServer } from './webServer';
 
 const webPort = 3000;
-
 
 let isShuttingDown = false;
 const shutdown = async (): Promise<void> => {
@@ -20,6 +18,7 @@ const shutdown = async (): Promise<void> => {
         process.exit(1);
     }, 10_000);
 
+    // Not sure why this is commented out
     // await stopDisplay();
     await stopDataSources();
     console.log('Data sources stopped');
@@ -33,15 +32,11 @@ const shutdown = async (): Promise<void> => {
     process.exit(0);
 };
 
-const signals: NodeJS.Signals[] = [
-    'SIGINT',
-    'SIGHUP',
-    'SIGQUIT',
-    'SIGTERM',
-];
+const signals: NodeJS.Signals[] = ['SIGINT', 'SIGHUP', 'SIGQUIT', 'SIGTERM'];
 
 const shutdownSignalHandler = (signal: NodeJS.Signals): void => {
     console.log(`\nReceived ${signal}, shutting down...`);
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks promise/prefer-await-to-then
     shutdown().catch((error) => {
         console.error(error);
         console.error('Failed to shutdown gracefully');
@@ -71,16 +66,20 @@ const initialize = async (): Promise<void> => {
 
     const webPromise = webServer.listen(webPort).then(() => {
         console.log(`HTTP server running on ${webPort}`);
-        
-        // console.log('Serving web UI');
-        // webServer.serveWebUi();
+
+        console.log('Serving web UI');
+        webServer.serveWebUi();
     });
 
-    const initPromises = [initDataSources(), fan.init().then(() => {
-        // This stupid pigpio library that is used for fan control overrides all signals to terminate the
-        // program but as a hack resetting signal handlers overrides them back to actually handle graceful shutdown
-        setSignalHandlers();
-    }), webPromise];
+    const initPromises = [
+        initDataSources(),
+        fan.init().then(() => {
+            // This stupid pigpio library that is used for fan control overrides all signals to terminate the
+            // program but as a hack resetting signal handlers overrides them back to actually handle graceful shutdown
+            setSignalHandlers();
+        }),
+        webPromise,
+    ];
 
     await Promise.all(initPromises);
 };
@@ -99,7 +98,6 @@ initialize()
         console.error(error);
         process.exit(1);
     });
-
 
 process.on('beforeExit', (code) => {
     console.log('Node event loop is empty causing process to exit with code:', code);
@@ -121,7 +119,9 @@ process.on('uncaughtException', (error) => {
     // Docs says that this async shouldn't be used anymore in uncaughtException,
     // but nothing really prevents it so lets try anyway to close anything possible
     console.error(error);
-    console.error('Uncaught exception happened, trying to close everything and exit\nPower might be left on on hardware modules');
+    console.error(
+        'Uncaught exception happened, trying to close everything and exit\nPower might be left on on hardware modules',
+    );
     shutdown().catch((newError) => {
         console.error(newError);
         console.error('Failed to shutdown gracefully');

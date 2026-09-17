@@ -13,9 +13,11 @@ export default class Fan {
     private speed = 60; // 0-100%
     private rpm = 0;
 
-    async init(): Promise<void> {
-        if (!env.EMULATED_HARDWARE) {
-            // dynamically load gpio as it is not available in emulated mode
+    public async init(): Promise<void> {
+        if (env.EMULATED_HARDWARE) {
+            console.log('Using emulated fan');
+        } else {
+            // Dynamically load gpio as it is not available in emulated mode.
             const { Gpio } = await import('pigpio');
 
             this.pwm = new Gpio(env.FAN_PWM_PIN, { mode: Gpio.OUTPUT });
@@ -39,12 +41,10 @@ export default class Fan {
                 this.pulseCount = 0;
                 this.tachCountStartTime = now;
             }, 1000);
-        } else {
-            console.log('Using emulated fan');
         }
-    };
+    }
 
-    stop(): void {
+    public stop(): void {
         if (this.pwm) {
             this.pwm.hardwarePwmWrite(0, 0);
             this.pwm = null;
@@ -59,9 +59,9 @@ export default class Fan {
         }
         this.pulseCount = 0;
         this.tachCountStartTime = process.hrtime.bigint();
-    };
+    }
 
-    setSpeed(speed: number): void {
+    public setSpeed(speed: number): void {
         if (speed < 0 || speed > 100) {
             throw new RangeError(`Invalid speed: ${speed}, must be between 0 and 100`);
         }
@@ -71,28 +71,25 @@ export default class Fan {
             this.pwm.hardwarePwmWrite(25_000, dutyCycle);
         }
     }
-    
-    getSpeed(): number {
+
+    public getSpeed(): number {
         return this.speed;
     }
 
-    getRpm(): number {
-        if (this.tach) {
-            return this.rpm;
-        }
-        else {
-            // Simulate RPM if not on hardware
-            const emulatedRpm = Math.round((this.speed / 100) * emulatedFanMaxRpm);
-            return emulatedRpm;
-        }
+    public getRpm(): number {
+        if (this.tach) return this.rpm;
+
+        // Simulate RPM if not on hardware
+        const emulatedRpm = Math.round((this.speed / 100) * emulatedFanMaxRpm);
+        return emulatedRpm;
     }
 
-    private tachAlert = (level: number): void => {
+    private tachAlert(level: number): void {
         if (level === 0) {
-            // falling edge
+            // Falling edge
             this.pulseCount++;
         }
     }
-};
+}
 
 export const fan = new Fan();

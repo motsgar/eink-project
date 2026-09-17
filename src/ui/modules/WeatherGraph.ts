@@ -1,11 +1,14 @@
 import 'chartjs-adapter-moment';
+import type { Canvas } from 'canvas';
+import type { ChartData, ScriptableScaleContext } from 'chart.js';
 
-import { type Canvas, createCanvas } from 'canvas';
-import { Chart, type ChartData, type ScriptableScaleContext, registerables } from 'chart.js';
+import { createCanvas } from 'canvas';
+import { Chart, registerables } from 'chart.js';
 
-import { EInkModule } from './EInkModule';
 import type { ModuleSettings } from '../../../web/src/schema';
+
 import { weatherDataSource } from '../../dataSources/weatherDataSource';
+import { EInkModule } from './EInkModule';
 
 type DataType = {
     labels: Date[];
@@ -15,10 +18,10 @@ type DataType = {
 };
 
 export class WeatherGraph extends EInkModule {
-    timePeriod: number;
-    chartInstance?: Chart;
+    private readonly timePeriod: number;
+    private chartInstance?: Chart;
 
-    constructor(settings: ModuleSettings) {
+    public constructor(settings: ModuleSettings) {
         super(settings);
 
         const defaultTimePeriod = 20;
@@ -43,13 +46,13 @@ export class WeatherGraph extends EInkModule {
         return { labels, tempData, feelslikeData, rainData };
     }
 
-    draw(width: number, height: number): Canvas {
+    public draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
 
         const { labels, tempData, feelslikeData, rainData } = this.getData();
         const graphData: ChartData = {
-            labels: labels,
+            labels,
             datasets: [
                 { data: tempData },
                 {
@@ -99,13 +102,16 @@ export class WeatherGraph extends EInkModule {
                             major: { enabled: true },
                             font: (context: ScriptableScaleContext | { tick: undefined }) => ({
                                 size: 25,
+                                // oxlint-disable-next-line typescript/strict-boolean-expressions
                                 weight: context.tick?.major ? 'bold' : 'normal',
                             }),
+                            // Not sure why these are commented out
                             // autoSkip: false,
                             // stepSize: 2,
                         },
                         grid: {
                             color: (context: ScriptableScaleContext | { tick: undefined }) =>
+                                // oxlint-disable-next-line typescript/strict-boolean-expressions
                                 context.tick?.major ? '#333333' : '#ffffff00',
                         },
                     },

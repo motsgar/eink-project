@@ -1,5 +1,8 @@
 import fs from 'node:fs/promises';
+import { z } from 'zod';
 
+// TODO: Resolve cycle if possible
+// oxlint-disable-next-line import/no-cycle
 import { env } from './env';
 
 /**
@@ -8,7 +11,7 @@ import { env } from './env';
  * @author Joseph JDBar Barron
  * @link https://dev.to/jdbar
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line typescript/no-explicit-any
 export const instanceOfNodeError = <T extends new (...args: any[]) => Error>(
     value: unknown,
     errorType?: T,
@@ -38,11 +41,13 @@ export const resolveBinaryPath = async (command: string): Promise<string> => {
 
         const fullPath = `${directory}/${command}`;
         try {
+            // oxlint-disable-next-line no-await-in-loop
             const stats = await fs.stat(fullPath);
             if (!stats.isFile()) {
                 continue;
             }
 
+            // oxlint-disable-next-line no-await-in-loop
             await fs.access(fullPath, fs.constants.X_OK);
 
             resolvedPaths.set(command, fullPath);
@@ -53,8 +58,8 @@ export const resolveBinaryPath = async (command: string): Promise<string> => {
                     throw error;
                 }
 
+                // oxlint-disable eslint/no-fallthrough
                 // These have been taken from glibc execvp
-                /* eslint-disable no-fallthrough */
                 switch (error.code) {
                     case 'EACCESS':
                         eaccessHappened = true;
@@ -68,7 +73,7 @@ export const resolveBinaryPath = async (command: string): Promise<string> => {
                         // Unknown error happened in checking the file for execution
                         throw error;
                 }
-                /* eslint-enable no-fallthrough */
+                // oxlint-enable eslint/no-fallthrough
             }
         }
     }
@@ -90,3 +95,8 @@ export const runningOnPi = async (): Promise<boolean> => {
 
     return cpuInfo.includes('Raspberry Pi');
 };
+
+export const dateSchema = z.codec(z.iso.datetime({ offset: true }), z.date(), {
+    decode: (isoString) => new Date(isoString), // ISO string → Date
+    encode: (date) => date.toISOString(), // Date → ISO string
+});

@@ -1,0 +1,7 @@
+allowBuilds:
+    '@serialport/bindings-cpp': false
+    canvas: false
+    esbuild: false
+    i2c-bus: false
+    it8951: false
+    pigpio: false

@@ -1,29 +1,26 @@
 {
     "compilerOptions": {
-        "lib": ["es2023"],
+        "target": "ES2024",
+        "lib": ["ES2024"],
         "module": "ESNext",
         "moduleResolution": "Bundler",
-        "target": "ESNext",
 
-        "baseUrl": "src",
+        "moduleDetection": "force",
+        "verbatimModuleSyntax": true,
+        "isolatedModules": true,
         "noEmit": true,
-        "outDir": "dist",
 
-        "allowArbitraryExtensions": false,
-        "esModuleInterop": true,
-        "experimentalDecorators": true,
-        "noImplicitAny": true,
+        "strict": true,
         "noImplicitReturns": true,
-        "pretty": true,
+        "esModuleInterop": true,
         "resolveJsonModule": true,
         "skipLibCheck": true,
-        "strict": true,
-        "allowImportingTsExtensions": true,
+
+        // "allowImportingTsExtensions": true,
         "paths": {
             // Using @/asdf instead of @asdf as the latter conflicts with npm scoped packages.
-            "@/*": ["*"] // This effectively makes @ a path alias for project src root.
+            "@/*": ["./src/*"] // This effectively makes @ a path alias for project src root.
         }
     },
-    "include": ["src/**/*"],
-    "exclude": []
+    "include": ["src", "esbuild.mts"]
 }

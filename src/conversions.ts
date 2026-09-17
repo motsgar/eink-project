@@ -1,5 +1,7 @@
+// oxlint-disable no-unused-vars
 import type { Canvas } from 'canvas';
 
+// TODO: Use these functions instead of redefining them elsewhere
 const convertTo4BPP = (image: Canvas): Buffer => {
     const buffer = Buffer.alloc((image.width * image.height) >> 1);
     const ctx = image.getContext('2d');
@@ -13,7 +15,7 @@ const convertTo4BPP = (image: Canvas): Buffer => {
         const pixelI = i >> 2;
         const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b) >> 4;
         const index = pixelI >> 1; // ⌊i/2⌋
-        buffer[index] = buffer[index] | (gray << ((1 - (pixelI % 2)) << 2));
+        buffer[index] |= gray << ((1 - (pixelI % 2)) << 2);
     }
     return buffer;
 };
@@ -31,7 +33,7 @@ const convertTo2BPP = (image: Canvas): Buffer => {
         const pixelI = i >> 2;
         const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b) >> 6;
         const index = pixelI >> 2; // ⌊i/4⌋
-        buffer[index] = buffer[index] | (gray << ((3 - (pixelI % 4)) << 1));
+        buffer[index] |= gray << ((3 - (pixelI % 4)) << 1);
     }
     return buffer;
 };
@@ -49,7 +51,7 @@ const convertTo1BPP = (image: Canvas): Buffer => {
         const pixelI = i >> 2;
         const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b) >> 7;
         const index = pixelI >> 3; // ⌊i/8⌋
-        buffer[index] = buffer[index] | (gray << (7 - (pixelI % 8)));
+        buffer[index] |= gray << (7 - (pixelI % 8));
     }
     return buffer;
 };

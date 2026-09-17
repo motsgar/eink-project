@@ -7,18 +7,20 @@ const BYTESReadCO2 = [0xff, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79];
 const BYTESABCOff = [0xff, 0x01, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x86];
 
 class CO2Sensor {
-    co2: number;
+    private readonly co2: number;
     private co2SerialBuffer: number[];
-    private co2Events: EventEmitter;
+    private readonly co2Events: EventEmitter;
     private serialPort?: SerialPort;
 
-    constructor() {
+    public constructor() {
         this.co2 = 600;
         this.co2SerialBuffer = [];
+        // TODO: Check if we should change this
+        // oxlint-disable-next-line unicorn/prefer-event-target
         this.co2Events = new EventEmitter({ captureRejections: true });
     }
 
-    start(): void {
+    public start(): void {
         if (env.EMULATED_HARDWARE) return;
         this.serialPort = new SerialPort({ path: '/dev/serial0', baudRate: 9600 });
         this.sendPacket(BYTESABCOff);
@@ -32,19 +34,20 @@ class CO2Sensor {
         this.serialPort.on('data', this.handleSerialData.bind(this));
     }
 
-    stop(): void {
+    public stop(): void {
         if (env.EMULATED_HARDWARE) return;
         this.serialPort?.close();
         this.serialPort = undefined;
     }
 
-    async getData(): Promise<number> {
+    public async getData(): Promise<number> {
         let errorCount = 0;
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        // TODO: Convert to a for loop instead
         while (true) {
             this.sendPacket(BYTESReadCO2);
             try {
+                // oxlint-disable-next-line no-await-in-loop -- Not applicable here
                 const co2 = await new Promise<number>((resolve, reject) => {
                     // TODO: implement timeout
                     this.co2Events.once('co2', (reading: number, error?: Error) => {
@@ -66,7 +69,7 @@ class CO2Sensor {
         if (this.co2SerialBuffer.length < 9) return;
         if (this.co2SerialBuffer.length > 9) throw new Error('Received too much data from co2 sensor');
 
-        if (this.getChecksum(this.co2SerialBuffer) !== this.co2SerialBuffer[8]) {
+        if (CO2Sensor.getChecksum(this.co2SerialBuffer) !== this.co2SerialBuffer[8]) {
             this.co2SerialBuffer = [];
             this.co2Events.emit('co2', 0, new Error('Bad checksum'));
             return;
@@ -77,7 +80,7 @@ class CO2Sensor {
         this.co2Events.emit('co2', co2);
     }
 
-    private getChecksum(packet: number[]): number {
+    private static getChecksum(packet: number[]): number {
         let checksum = 0;
         for (let i = 1; i < 8; i++) checksum = (checksum + packet[i]) % 256;
         checksum = 0xff - checksum;

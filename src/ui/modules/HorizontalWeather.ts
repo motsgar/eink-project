@@ -1,29 +1,32 @@
-import { type Canvas, createCanvas } from 'canvas';
+import type { Canvas } from 'canvas';
 
-import { EInkModule } from './EInkModule';
+import { createCanvas } from 'canvas';
+
 import type { ModuleSettings } from '../../../web/src/schema';
-import { weatherDataSource } from '../../dataSources/weatherDataSource';
 import type { Forecast } from '../../dataSources/weatherParse';
 
-export class HorizontalWeather extends EInkModule {
-    times: number[];
+import { weatherDataSource } from '../../dataSources/weatherDataSource';
+import { EInkModule } from './EInkModule';
 
-    constructor(settings: ModuleSettings) {
+export class HorizontalWeather extends EInkModule {
+    private readonly times: number[];
+
+    public constructor(settings: ModuleSettings) {
         super(settings);
 
         const defaultTimes = [0, 1, 2, 3, 5, 7, 10, 14];
         this.times = settings.times ?? defaultTimes;
     }
 
-    private getText(forecast: Forecast): string {
+    private static getText(forecast: Forecast): string {
         return `${forecast.temperature}°C (${forecast.feelsLike}°C)  |  ${forecast.windSpeedMS} m/s`;
     }
 
-    private parseTime(forecast: Forecast): string {
+    private static parseTime(forecast: Forecast): string {
         return `${forecast.localtime.getHours()}:${forecast.localtime.getMinutes()}`;
     }
 
-    draw(width: number, height: number): Canvas {
+    public draw(width: number, height: number): Canvas {
         const timeSvgPadding = 30;
         const svgTextPadding = 10;
         const svgPadding = 10;
@@ -57,8 +60,8 @@ export class HorizontalWeather extends EInkModule {
         ctx.textBaseline = 'middle';
         let blockWidth = 0;
         for (const time of this.times) {
-            const timeLength = ctx.measureText(this.parseTime(forecasts[time])).width;
-            const dataLength = ctx.measureText(this.getText(forecasts[time])).width;
+            const timeLength = ctx.measureText(HorizontalWeather.parseTime(forecasts[time])).width;
+            const dataLength = ctx.measureText(HorizontalWeather.getText(forecasts[time])).width;
             const imageSize = blockHeight - svgPadding;
 
             blockWidth = Math.max(blockWidth, timeLength + dataLength + imageSize + timeSvgPadding + svgTextPadding);
@@ -72,8 +75,8 @@ export class HorizontalWeather extends EInkModule {
             ctx.fillStyle = 'black';
 
             let xPos = xPadding;
-            ctx.fillText(this.parseTime(forecasts[time]), xPos, yPos + blockHeight / 2);
-            xPos += ctx.measureText(this.parseTime(forecasts[time])).width + timeSvgPadding;
+            ctx.fillText(HorizontalWeather.parseTime(forecasts[time]), xPos, yPos + blockHeight / 2);
+            xPos += ctx.measureText(HorizontalWeather.parseTime(forecasts[time])).width + timeSvgPadding;
 
             const symbolId: number = forecasts[time].smartSymbol;
             const imageSize = blockHeight - svgPadding;
@@ -85,7 +88,7 @@ export class HorizontalWeather extends EInkModule {
             }
             xPos += imageSize + svgTextPadding;
 
-            ctx.fillText(this.getText(forecasts[time]), xPos, yPos + blockHeight / 2);
+            ctx.fillText(HorizontalWeather.getText(forecasts[time]), xPos, yPos + blockHeight / 2);
             yPos += blockHeight;
         }
 

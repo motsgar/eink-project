@@ -1,7 +1,9 @@
 import type { ENDIANNESS, IMAGE_ROTATION, PIXEL_PACKING, WAVEFORM } from 'it8951';
 
 export class DisplayOperationError extends Error {
-    constructor(message: string) {
+    // Check if we should add the name field
+    // oxlint-disable-next-line unicorn/custom-error-definition
+    public constructor(message: string) {
         super(message);
         Object.setPrototypeOf(this, DisplayOperationError.prototype);
     }

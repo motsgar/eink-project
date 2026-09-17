@@ -1,15 +1,18 @@
-import { type Canvas, type Image, createCanvas, loadImage } from 'canvas';
+import type { Canvas, Image } from 'canvas';
 
-import { EInkModule } from './EInkModule';
+import { createCanvas, loadImage } from 'canvas';
+
 import type { ModuleSettings } from '../../../web/src/schema';
+
 import { sensorDataSource } from '../../dataSources/SensorDataSource';
 import { weatherDataSource } from '../../dataSources/weatherDataSource';
+import { EInkModule } from './EInkModule';
 
 export class Status extends EInkModule {
     private sunriseIcon?: Image;
     private sunsetIcon?: Image;
 
-    constructor(settings: ModuleSettings) {
+    public constructor(settings: ModuleSettings) {
         super(settings);
         this.readyPromise = this.loadIcons();
     }
@@ -19,22 +22,32 @@ export class Status extends EInkModule {
         this.sunsetIcon = await loadImage('resources/icons/sunset.svg');
     }
 
-    draw(width: number, height: number): Canvas {
+    private static displayTime(date: Date): string {
+        const offset = date.getTimezoneOffset();
+        const localTime = new Date(date.getTime() - offset * 60 * 1000);
+        return localTime.toISOString().split('T')[1].slice(0, 5);
+    }
+
+    public draw(width: number, height: number): Canvas {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
 
         const observation = weatherDataSource.weatherData?.observation;
         const sunInfo = weatherDataSource.weatherData?.sunInfo;
         const warnings = weatherDataSource.weatherData?.warnings;
-        const sensorData_ = sensorDataSource.latestData;
+        const sensorData = sensorDataSource.latestData;
         if (warnings === undefined || sunInfo === undefined || observation === undefined) {
             throw new Error("Weather data hasn't been initialized");
         }
         if (this.sunriseIcon === undefined || this.sunsetIcon === undefined) {
             throw new Error("Status icons haven't been initialized");
         }
-        if (sensorData_ === undefined) {
+        if (sensorData === undefined) {
             throw new Error("Sensor data hasn't been initialized");
+        }
+        // TODO: Better error / missing value handling
+        if (sunInfo.sunrise === null || sunInfo.sunset === null) {
+            throw new Error('Sunrise or sunset is null');
         }
 
         // Main clock + date
@@ -60,12 +73,7 @@ export class Status extends EInkModule {
         ctx.font = '25pt sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
-        const displayTime = (date: Date): string => {
-            const offset = date.getTimezoneOffset();
-            const localTime = new Date(date.getTime() - offset * 60 * 1000);
-            return localTime.toISOString().split('T')[1].slice(0, 5);
-        };
-        const sunString = `${displayTime(sunInfo.sunrise)} - ${displayTime(sunInfo.sunset)}`;
+        const sunString = `${Status.displayTime(sunInfo.sunrise)} - ${Status.displayTime(sunInfo.sunset)}`;
         ctx.fillText(sunString, width / 2, height - 10);
         const textWidth = ctx.measureText(sunString).width;
         const iconSize = 40;
@@ -76,6 +84,7 @@ export class Status extends EInkModule {
             iconSize,
             iconSize,
         );
+        // Not sure why this is commented out
         // iconSize -= 4;
         ctx.drawImage(this.sunsetIcon, width / 2 + textWidth / 2 + 10, height - 10 - iconSize, iconSize, iconSize);
 
@@ -85,7 +94,7 @@ export class Status extends EInkModule {
 
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        let text = [`${sensorData_.temperature.toFixed(1)}°C`, `${sensorData_.co2.toFixed(1)} ppm`];
+        let text = [`${sensorData.temperature.toFixed(1)}°C`, `${sensorData.co2.toFixed(1)} ppm`];
         yPos = 10;
         for (const line of text) {
             ctx.fillText(line, 10, yPos);
@@ -95,9 +104,9 @@ export class Status extends EInkModule {
 
         ctx.textAlign = 'left';
         ctx.textBaseline = 'bottom';
-        text = [`${sensorData_.humidity.toFixed(1)} %`, `${sensorData_.pressure.toFixed(1)} hPa`];
+        text = [`${sensorData.humidity.toFixed(1)} %`, `${sensorData.pressure.toFixed(1)} hPa`];
         yPos = height - 10;
-        for (const line of text.reverse()) {
+        for (const line of text.toReversed()) {
             ctx.fillText(line, 10, yPos);
             const measureText = ctx.measureText(line);
             yPos -= measureText.actualBoundingBoxAscent + measureText.actualBoundingBoxDescent + padding;
@@ -125,7 +134,7 @@ export class Status extends EInkModule {
             .map((warning) => warning[0]);
         if (text.length === 0) text = ['No warnings'];
         yPos = height - 10;
-        for (const line of text.reverse()) {
+        for (const line of text.toReversed()) {
             ctx.fillText(line, width - 10, yPos);
             const measureText = ctx.measureText(line);
             yPos -= measureText.actualBoundingBoxAscent + measureText.actualBoundingBoxDescent + padding;

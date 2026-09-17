@@ -1,24 +1,25 @@
-import bodyParser from 'body-parser';
-import express, { type Express } from 'express';
-import { readFile } from 'node:fs/promises';
+import type { Express } from 'express';
 import type { Server } from 'node:http';
+
+import bodyParser from 'body-parser';
+import express from 'express';
 import path from 'node:path';
 
-import { draw } from './ui/Draw';
 import { ConfigSchema } from '../web/src/schema';
+import { draw } from './ui/Draw';
 
 export default class WebServer {
-    private http: Express;
+    private readonly http: Express;
     private images: Buffer[];
     private server: Server | null = null;
 
-    constructor() {
+    public constructor() {
         this.images = [];
 
         this.http = express();
         this.http.use(bodyParser.urlencoded({ extended: true }));
         this.http.use(bodyParser.json());
-        
+
         // TODO: Read images from draw code
         // if (WEBIMAGES) {
         //     draw.readyPromise
@@ -35,17 +36,20 @@ export default class WebServer {
         //     }, 60 * 1000);
         // }
     }
-    serveWebUi(): void {
+    public serveWebUi(): void {
         this.http.use(express.static(path.join(__dirname, '../', 'webDist')));
         this.http.get('*path', (req, res) => {
             console.log('Serving web ui' + __dirname);
             console.log('Serving web ui' + path.join(__dirname, '../', 'webDist', 'index.html'));
-            const manualPath = path.join(__dirname, '../', 'webDist', 'index.html');
-            readFile(manualPath).then((data) => {
-                console.log('File: ' + data.toString());
-            }).catch((err) => {
-                console.log('Serving web ui' + err);
-            });
+            // Probably not necessary debug print
+            // const manualPath = path.join(__dirname, '../', 'webDist', 'index.html');
+            // readFile(manualPath)
+            //     .then((data) => {
+            //         console.log('File: ' + data.toString());
+            //     })
+            //     .catch((err) => {
+            //         console.log('Serving web ui' + err);
+            //     });
             res.sendFile(path.join(__dirname, '../', 'webDist', 'index.html'));
         });
     }
@@ -58,21 +62,23 @@ export default class WebServer {
         });
 
         apiRouter.get('/images/:id', (req, res) => {
+            // TODO: Use zod to parse the integer
+            // oxlint-disable-next-line unicorn/prefer-number-properties radix
             const id = parseInt(req.params.id);
             if (id < 0 || id >= this.images.length) {
-            res.status(404).send('Image not found');
+                res.status(404).send('Image not found');
             } else {
-            res.set('Content-Type', 'image/png');
-            res.send(this.images[id]);
+                res.set('Content-Type', 'image/png');
+                res.send(this.images[id]);
             }
         });
 
         apiRouter.post('/update', async (req, res) => {
             const result = ConfigSchema.safeParse(req.body);
             if (!result.success) {
-            console.error(result.error);
-            res.status(400).json(result.error);
-            return;
+                console.error(result.error);
+                res.status(400).json(result.error);
+                return;
             }
             const updatedData = result.data;
 
@@ -86,7 +92,7 @@ export default class WebServer {
         this.http.use('/api', apiRouter);
     }
 
-    async listen(port: number): Promise<void> {
+    public async listen(port: number): Promise<void> {
         this.registerRoutes();
 
         return new Promise((resolve) => {
@@ -94,7 +100,7 @@ export default class WebServer {
         });
     }
 
-    async close(): Promise<void> {
+    public async close(): Promise<void> {
         return new Promise((resolve) => {
             if (this.server) {
                 this.server.close(() => {

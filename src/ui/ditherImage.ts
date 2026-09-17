@@ -1,16 +1,17 @@
+import { getResolvedPath } from '@/utils';
 import { Image } from 'canvas';
 import { spawn } from 'node:child_process';
 
-import { getResolvedPath } from '@/utils';
-
-export const ditherImage = async (inputImageBuffer: Buffer, width?: number, height?: number): Promise<Image> => {
-    // TODO make more robust with e.g. more process lifecycle handling and timeouts
-    
-    return new Promise((resolve, reject) => {
+// TODO make more robust with e.g. more process lifecycle handling and timeouts
+export const ditherImage = async (inputImageBuffer: Buffer, width?: number, height?: number): Promise<Image> =>
+    new Promise((resolve, reject) => {
         if (width === undefined) {
             const image = new Image();
             image.src = inputImageBuffer;
+            // TODO: Refactor
+            // oxlint-disable-next-line prefer-destructuring no-param-reassign
             width = image.width;
+            // oxlint-disable-next-line prefer-destructuring no-param-reassign
             height = image.height;
         }
         const args = [
@@ -50,7 +51,6 @@ export const ditherImage = async (inputImageBuffer: Buffer, width?: number, heig
             outputBuffer = Buffer.concat([outputBuffer, data]);
         });
 
-
         convertProcess.stderr.on('data', (data) => {
             console.error(`Image conversion process: ${data}`);
         });
@@ -69,4 +69,3 @@ export const ditherImage = async (inputImageBuffer: Buffer, width?: number, heig
             }
         });
     });
-};

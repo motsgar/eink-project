@@ -1,8 +1,12 @@
-import { type Image, loadImage } from 'canvas';
-import * as fs from 'node:fs/promises';
-import suncalc from 'suncalc';
+import type { Image } from 'canvas';
 
-import { type Forecast, type Observation, parseForecastXml, parseObservationXml } from './weatherParse';
+import { loadImage } from 'canvas';
+import * as fs from 'node:fs/promises';
+import * as SunCalc from 'suncalc';
+
+import type { Forecast, Observation } from './weatherParse';
+
+import { parseForecastXml, parseObservationXml } from './weatherParse';
 
 export type Warnings = {
     forestfire: boolean;
@@ -23,22 +27,22 @@ export type Warnings = {
 export type WeatherDataType = {
     observation: Observation;
     forecasts: Forecast[];
-    sunInfo: suncalc.GetTimesResult;
+    sunInfo: SunCalc.SunTimes;
     warnings: Warnings;
 };
 
 class WeatherDataSource {
-    weatherData?: WeatherDataType;
-    weatherSymbols: { [key: number]: Image };
-    readyPromise: Promise<unknown>;
-    fetchInterval?: NodeJS.Timeout;
+    public weatherData?: WeatherDataType;
+    public weatherSymbols: Record<number, Image>;
+    public readyPromise: Promise<unknown>;
+    private fetchInterval?: NodeJS.Timeout;
 
-    constructor() {
+    public constructor() {
         this.weatherSymbols = {};
         this.readyPromise = this.initializeWeatherSymbols();
     }
 
-    async start(): Promise<void> {
+    public async start(): Promise<void> {
         await this.fetchWeatherData();
         this.fetchInterval = setInterval(
             () => {
@@ -48,7 +52,7 @@ class WeatherDataSource {
         );
     }
 
-    stop(): void {
+    public stop(): void {
         clearInterval(this.fetchInterval);
         this.fetchInterval = undefined;
     }
@@ -73,7 +77,7 @@ class WeatherDataSource {
         const obsResponse = await fetch(obsUrl);
         const observation = await parseObservationXml(await obsResponse.text());
 
-        const sunInfo = suncalc.getTimes(new Date(), 60.203_07, 24.961_31);
+        const sunInfo = SunCalc.getTimes(new Date(), 60.20307, 24.96131);
 
         // TODO: Fix fetch warnings
         this.weatherData = {
@@ -103,7 +107,12 @@ class WeatherDataSource {
         for (const filename of await fs.readdir(symbolsDir)) {
             if (!filename.endsWith('.svg')) continue;
 
+            // TODO: Use zod for int parsing
+            // oxlint-disable-next-line radix unicorn/prefer-number-properties
             const index = parseInt(filename.split('.')[0]);
+
+            // TODO: Parallelize
+            // oxlint-disable-next-line no-await-in-loop
             const symbol = await loadImage(`${symbolsDir}/${filename}`);
             this.weatherSymbols[index] = symbol;
         }

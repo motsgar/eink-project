@@ -28,7 +28,7 @@ const initForecast: Forecast = {
 };
 
 export const parseForecastXml = async (xml: string): Promise<Forecast[]> =>
-    new Promise((resolve, reject) =>
+    new Promise((resolve, reject) => {
         parseString(xml, (err, rawResult) => {
             if (err) {
                 reject(err);
@@ -84,16 +84,18 @@ export const parseForecastXml = async (xml: string): Promise<Forecast[]> =>
                             forecastMap[dateKey].localtime = date;
                         }
                         if (key === 'dark') forecastMap[dateKey][key] = Boolean(stringVal);
+                        // TODO: Use zod for number parsing
+                        // oxlint-disable-next-line unicorn/prefer-number-properties unicorn/prefer-number-coercion
                         else forecastMap[dateKey][key] = parseFloat(stringVal);
                     }
                 }
 
                 const forecastData = Object.entries(forecastMap);
-                forecastData.sort();
+                forecastData.sort(([date1, _], [date2, __]) => date1.localeCompare(date2));
                 resolve(forecastData.map(([, forecast]) => forecast));
             }
-        }),
-    );
+        });
+    });
 
 export type Observation = {
     localtime: Date;
@@ -117,7 +119,7 @@ const initObservation: Observation = {
 };
 
 export const parseObservationXml = async (xml: string): Promise<Observation> =>
-    new Promise((resolve, reject) =>
+    new Promise((resolve, reject) => {
         parseString(xml, (err, rawResult) => {
             if (err) {
                 reject(err);
@@ -134,8 +136,6 @@ export const parseObservationXml = async (xml: string): Promise<Observation> =>
                     const dataType = dataPoints.$['gml:id'];
 
                     let key: keyof Observation | 'invalid' = 'invalid';
-                    // The rule should allow fallback to default?
-                    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
                     switch (dataType) {
                         case 'obs-obs-1-1-t2m':
                             key = 'temperature';
@@ -153,7 +153,7 @@ export const parseObservationXml = async (xml: string): Promise<Observation> =>
                             key = 'precipitation1h';
                             break;
                         case 'obs-obs-1-1-ri_10min':
-                            // obs-obs-1-1-r_1h Would also be an option
+                            // We could also use [obs-obs-1-1-r_1h]
                             key = 'precipitationIntensity';
                             break;
                         case 'obs-obs-1-1-p_sea':
@@ -169,11 +169,13 @@ export const parseObservationXml = async (xml: string): Promise<Observation> =>
                         if (date.getTime() < observation.localtime.getTime()) continue;
                         const stringVal = point['wml2:MeasurementTVP'][0]['wml2:value'][0];
                         observation.localtime = date;
+                        // TODO: Parse float with zod
+                        // oxlint-disable-next-line unicorn/prefer-number-properties unicorn/prefer-number-coercion
                         observation[key] = parseFloat(stringVal);
                     }
                 }
 
                 resolve(observation);
             }
-        }),
-    );
+        });
+    });

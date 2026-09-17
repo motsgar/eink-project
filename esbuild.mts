@@ -1,7 +1,9 @@
+import type { BuildOptions, PluginBuild } from 'esbuild';
+
 import { build, buildSync } from 'esbuild';
 import path from 'node:path';
 
-const commonConfig = {
+const commonConfig: BuildOptions = {
     bundle: true,
     entryPoints: ['./src/index.ts'],
     format: 'cjs',
@@ -14,8 +16,7 @@ const commonConfig = {
 
 const workerSourcePlugin = {
     name: 'worker-source-plugin',
-    /** @param {import('esbuild').PluginBuild} buildConfig */
-    setup: (buildConfig) => {
+    setup: (buildConfig: PluginBuild) => {
         buildConfig.onResolve({ filter: /^worker:\/\//u }, (args) => {
             const workerPath = args.path.replace('worker://', '');
             const fullPath = path.resolve(args.resolveDir, workerPath);
@@ -27,7 +28,7 @@ const workerSourcePlugin = {
                 ...commonConfig,
                 entryPoints: [args.path],
                 sourcemap: false, // Running a worker through eval doesn't support sourcemaps
-                // TODO make this automatically split the bundle to multiple files where eacho worker
+                // TODO make this automatically split the bundle to multiple files where each worker
                 // is in its own file that can be imported regularly
                 write: false,
             });
@@ -46,7 +47,12 @@ const workerSourcePlugin = {
     },
 };
 
-build({
-    ...commonConfig,
-    plugins: [workerSourcePlugin],
-}).catch(() => process.exit(1));
+try {
+    await build({
+        ...commonConfig,
+        plugins: [workerSourcePlugin],
+    });
+} catch (error) {
+    console.error(error);
+    process.exit(1);
+}

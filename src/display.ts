@@ -1,31 +1,32 @@
 import type { Canvas } from 'canvas';
+
 import { ENDIANNESS, IMAGE_ROTATION, PIXEL_PACKING, WAVEFORM } from 'it8951';
 import { EventEmitter, once } from 'node:events';
+import { setImmediate } from 'node:timers/promises';
 import displayWorker from 'worker://displayWorker';
 
-import {
-    DisplayOperationError,
-    type FromWorkerMessage,
-    type ScreenInfoProps,
-    type ToWorkerMessage,
-} from './displayWorkerMessageTypes';
+import type { FromWorkerMessage, ScreenInfoProps, ToWorkerMessage } from './displayWorkerMessageTypes';
+
+import { DisplayOperationError } from './displayWorkerMessageTypes';
 
 const worker = displayWorker.create();
 
 let cleanupRunning = false;
 let turnRunning = false;
-// eslint-disable-next-line unicorn/prefer-event-target
+// TODO: Check if we should switch
+// oxlint-disable-next-line unicorn/prefer-event-target
 const nextTurnEvent = new EventEmitter();
 
-const turnWrapper = <ReturnType, Args extends unknown[]>(
-    fn: (...args: Args) => Promise<ReturnType>,
-): ((...args: Args) => Promise<ReturnType>) => {
-    return async (...args) => {
+const turnWrapper =
+    <ReturnType, Args extends unknown[]>(
+        fn: (...args: Args) => Promise<ReturnType>,
+    ): ((...args: Args) => Promise<ReturnType>) =>
+    async (...args) => {
         if (turnRunning) {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             while (true) {
+                // oxlint-disable-next-line no-await-in-loop -- Not applicable here
                 await once(nextTurnEvent, 'next');
-                if (!turnRunning) break; // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+                if (!turnRunning) break;
             }
         }
         turnRunning = true;
@@ -36,11 +37,11 @@ const turnWrapper = <ReturnType, Args extends unknown[]>(
         nextTurnEvent.emit('next');
         return result;
     };
-};
 
 type ResponseForMessageType<MessageType extends ToWorkerMessage['type']> =
     Extract<FromWorkerMessage, { type: MessageType }> extends never
-        ? void
+        ? // oxlint-disable-next-line typescript/no-invalid-void-type
+          void
         : Omit<Extract<FromWorkerMessage, { type: MessageType }>, 'type'>;
 
 const postMessage = async <MessageType extends ToWorkerMessage['type']>(
@@ -64,6 +65,7 @@ const postMessage = async <MessageType extends ToWorkerMessage['type']>(
                 return;
             }
 
+            // oxlint-disable-next-line typescript/no-unsafe-type-assertion
             const responseData = response as unknown as ResponseForMessageType<MessageType> & {
                 type?: MessageType;
             };
@@ -139,7 +141,7 @@ const convertTo4BPP = (image: Canvas): Buffer => {
 
         const gray = Math.round(((r + g + b) / 3 / 255) * 15);
         const index = Math.floor(i / 8);
-        buffer[index] = buffer[index] | (i % 8 === 0 ? gray << 4 : gray);
+        buffer[index] |= i % 8 === 0 ? gray << 4 : gray;
     }
     return buffer;
 };
@@ -151,7 +153,7 @@ export enum BPP {
 }
 
 export const writeCanvas = async (x: number, y: number, canvas: Canvas, bpp: BPP): Promise<void> => {
-    if (cleanupRunning) return new Promise((resolve) => setImmediate(resolve));
+    if (cleanupRunning) return setImmediate();
 
     const image = convertTo4BPP(canvas);
 
@@ -169,13 +171,13 @@ export const writeCanvas = async (x: number, y: number, canvas: Canvas, bpp: BPP
 };
 
 export const displayArea = async (x: number, y: number, dx: number, dy: number, mode: WAVEFORM): Promise<void> => {
-    if (cleanupRunning) return new Promise((resolve) => setImmediate(resolve));
+    if (cleanupRunning) return setImmediate();
 
     await Promise.all([screen.enable(), screen.displayArea(x, y, dx, dy, mode), screen.disable()]);
 };
 
 export const drawCanvas = async (x: number, y: number, canvas: Canvas): Promise<void> => {
-    if (cleanupRunning) return new Promise((resolve) => setImmediate(resolve));
+    if (cleanupRunning) return setImmediate();
 
     const image = convertTo4BPP(canvas);
 
@@ -202,7 +204,13 @@ export const stopDisplay = async (): Promise<void> => {
     console.log('Cleaning up display');
     cleanupRunning = true;
 
-    if (screen.screenInfo !== undefined) {
+    if (screen.screenInfo === undefined) {
+        await screen.disable().catch((err) => {
+            console.error('fail simple cleanup, display might be left in bad state');
+            console.error(err);
+        });
+    } else {
+        // TODO: Should we really be using Promise.all here?
         await Promise.all([
             screen.enable(),
             screen.displayArea(0, 0, screen.screenInfo.width, screen.screenInfo.height, WAVEFORM.INIT),
@@ -211,15 +219,12 @@ export const stopDisplay = async (): Promise<void> => {
             console.error('fail cleanup, try without display clear');
             console.error(err);
 
+            // Todo: Refactor
+            // oxlint-disable-next-line promise/no-nesting
             screen.disable().catch((err2) => {
                 console.error('fail simple cleanup, display might be left in bad state');
                 console.error(err2);
             });
-        });
-    } else {
-        await screen.disable().catch((err) => {
-            console.error('fail simple cleanup, display might be left in bad state');
-            console.error(err);
         });
     }
     console.log('Display clean up done');

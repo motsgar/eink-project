@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { dateSchema } from '../utils';
+
 const forecastDataTypeSchema = z.enum([
     'mts-1-1-Temperature',
     'mts-1-1-FeelsLike',
@@ -16,7 +18,7 @@ const forecastDataPointSchema = z.object({
         .object({
             'wml2:MeasurementTVP': z
                 .object({
-                    'wml2:time': z.string().datetime({ offset: true }).pipe(z.coerce.date()).array().nonempty(),
+                    'wml2:time': dateSchema.array().nonempty(),
                     'wml2:value': z.string().array().nonempty(),
                 })
                 .array()
@@ -69,7 +71,7 @@ const observationDataPointSchema = z.object({
         .object({
             'wml2:MeasurementTVP': z
                 .object({
-                    'wml2:time': z.string().datetime({ offset: true }).pipe(z.coerce.date()).array().nonempty(),
+                    'wml2:time': dateSchema.array().nonempty(),
                     'wml2:value': z.string().array().nonempty(),
                 })
                 .array()

@@ -1,21 +1,24 @@
-import { type Canvas, createCanvas } from 'canvas';
+import type { Canvas } from 'canvas';
 
-import { EInkModule } from './EInkModule';
+import { createCanvas } from 'canvas';
+
 import type { ModuleSettings } from '../../../web/src/schema';
-import { weatherDataSource } from '../../dataSources/weatherDataSource';
 import type { Forecast } from '../../dataSources/weatherParse';
 
-export class Weather extends EInkModule {
-    times: number[];
+import { weatherDataSource } from '../../dataSources/weatherDataSource';
+import { EInkModule } from './EInkModule';
 
-    constructor(settings: ModuleSettings) {
+export class Weather extends EInkModule {
+    private readonly times: number[];
+
+    public constructor(settings: ModuleSettings) {
         super(settings);
 
         const defaultTimes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         this.times = settings.times ?? defaultTimes;
     }
 
-    private getText(forecast: Forecast): string[] {
+    private static getText(forecast: Forecast): string[] {
         return [
             `${Math.round(forecast.temperature)}°`,
             `${Math.round(forecast.feelsLike)}°`,
@@ -24,11 +27,12 @@ export class Weather extends EInkModule {
         ];
     }
 
-    parseTime(forecast: Forecast): string {
-        return forecast.localtime.getHours().toString(); // Return hour
-    }
+    // Unused, remove?
+    // private static parseTime(forecast: Forecast): string {
+    //     return forecast.localtime.getHours().toString(); // Return hour
+    // }
 
-    draw(width: number, height: number): Canvas {
+    public draw(width: number, height: number): Canvas {
         const timeSvgPadding = 30;
         const svgTextPadding = 20;
         const textPadding = 25;
@@ -37,6 +41,7 @@ export class Weather extends EInkModule {
         const ctx = canvas.getContext('2d');
 
         const forecasts = weatherDataSource.weatherData?.forecasts;
+        // oxlint-disable-next-line prefer-destructuring
         const weatherSymbols = weatherDataSource.weatherSymbols;
         if (forecasts === undefined) throw new Error("Weather data hasn't been initialized");
 
@@ -57,7 +62,7 @@ export class Weather extends EInkModule {
             const imageSize = blockWidth;
             yPos += imageSize + svgTextPadding;
 
-            const text = this.getText(forecasts[time]);
+            const text = Weather.getText(forecasts[time]);
             for (const line of text) {
                 measureText = ctx.measureText(line);
                 yPos += measureText.actualBoundingBoxAscent + measureText.actualBoundingBoxDescent + textPadding;
@@ -87,7 +92,7 @@ export class Weather extends EInkModule {
             }
             yPos += imageSize + svgTextPadding;
 
-            const text = this.getText(forecasts[time]);
+            const text = Weather.getText(forecasts[time]);
             for (const line of text) {
                 ctx.textBaseline = 'top';
                 ctx.fillText(line, xPos + blockWidth / 2, yPos);

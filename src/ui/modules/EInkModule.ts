@@ -1,15 +1,18 @@
-import { type Canvas, createCanvas } from 'canvas';
+import type { Canvas } from 'canvas';
+
+import { createCanvas } from 'canvas';
 
 import type { ModuleSettings } from '../../../web/src/schema';
 
 export class EInkModule {
-    readyPromise?: Promise<unknown>;
+    public readyPromise?: Promise<unknown>;
 
-    constructor(settings: ModuleSettings) {
+    public constructor(settings: ModuleSettings) {
         void settings;
     }
 
-    draw(width: number, height: number): Canvas {
+    // oxlint-disable-next-line class-methods-use-this
+    public draw(width: number, height: number): Canvas {
         return createCanvas(width, height);
     }
 }

@@ -1,4 +1,6 @@
-import bme280, { type Sensor } from 'bme280';
+import type { Sensor } from 'bme280';
+
+import bme280 from 'bme280';
 
 import { env } from '../../env';
 
@@ -9,10 +11,10 @@ export type EnvData = {
 };
 
 class EnvSensor {
-    data?: EnvData;
+    private data?: EnvData;
     private sensor?: Sensor;
 
-    async start(): Promise<void> {
+    public async start(): Promise<void> {
         if (env.EMULATED_HARDWARE) return;
         await bme280
             .open({
@@ -27,13 +29,13 @@ class EnvSensor {
             });
     }
 
-    async stop(): Promise<void> {
+    public async stop(): Promise<void> {
         if (env.EMULATED_HARDWARE) return;
         await this.sensor?.close();
         this.sensor = undefined;
     }
 
-    async getData(): Promise<EnvData> {
+    public async getData(): Promise<EnvData> {
         if (this.sensor === undefined) {
             throw new Error('bme280 sensor is not ready even though readyPromise was awaited');
         }

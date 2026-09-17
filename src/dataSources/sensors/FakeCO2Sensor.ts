@@ -1,15 +1,15 @@
 type FakeData = { value: number; min: number; max: number; dx: number };
 
 class FakeCO2Sensor {
-    co2: number;
-    private fakeCo2: FakeData;
+    private co2: number;
+    private readonly fakeCo2: FakeData;
 
-    constructor() {
+    public constructor() {
         this.co2 = 600;
         this.fakeCo2 = { value: 600, min: 450, max: 4000, dx: 0 };
     }
 
-    private nextValue(fakeData: FakeData): number {
+    private static nextValue(fakeData: FakeData): number {
         const range = fakeData.max - fakeData.min;
         const half = (fakeData.max + fakeData.min) / 2;
         const step = (fakeData.max - fakeData.min) / 2000;
@@ -26,18 +26,20 @@ class FakeCO2Sensor {
         return fakeData.value;
     }
 
-    getFakeData(amount: number): number[] {
+    public getFakeData(amount: number): number[] {
         const data = [];
         for (let i = 0; i < amount; i++) {
-            this.co2 = this.nextValue(this.fakeCo2);
+            this.co2 = FakeCO2Sensor.nextValue(this.fakeCo2);
             data.push(this.co2);
         }
         return data;
     }
 
-    async getData(): Promise<number> {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        this.co2 = this.nextValue(this.fakeCo2);
+    public async getData(): Promise<number> {
+        await new Promise((resolve) => {
+            setTimeout(resolve, 100);
+        });
+        this.co2 = FakeCO2Sensor.nextValue(this.fakeCo2);
         return this.co2;
     }
 }
