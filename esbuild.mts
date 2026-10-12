@@ -1,3 +1,5 @@
+// Esbuild uses Go regular expressions which doesn't support the u flag
+// oxlint-disable require-unicode-regexp
 import type { BuildOptions, PluginBuild } from 'esbuild';
 
 import { build, buildSync } from 'esbuild';
@@ -17,13 +19,13 @@ const commonConfig: BuildOptions = {
 const workerSourcePlugin = {
     name: 'worker-source-plugin',
     setup: (buildConfig: PluginBuild) => {
-        buildConfig.onResolve({ filter: /^worker:\/\//u }, (args) => {
+        buildConfig.onResolve({ filter: /^worker:\/\// }, (args) => {
             const workerPath = args.path.replace('worker://', '');
             const fullPath = path.resolve(args.resolveDir, workerPath);
             return { namespace: 'worker-source', path: fullPath };
         });
 
-        buildConfig.onLoad({ filter: /.*/u, namespace: 'worker-source' }, (args) => {
+        buildConfig.onLoad({ filter: /.*/, namespace: 'worker-source' }, (args) => {
             const bundledWorker = buildSync({
                 ...commonConfig,
                 entryPoints: [args.path],
