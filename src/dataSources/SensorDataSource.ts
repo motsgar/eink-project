@@ -41,7 +41,6 @@ class SensorDataSource {
             console.log(`Converting ${dataDir}/${filename} to ${dataDir}/${basename}.thin.bin`);
 
             // TODO: Parallelize
-            // oxlint-disable-next-line no-await-in-loop
             const fileData = await fs.readFile(`${dataDir}/${filename}`);
             let data = [];
             for (let i = 0; i < fileData.length; i += 5 * 8) {
@@ -65,7 +64,6 @@ class SensorDataSource {
             }
 
             // TODO: Use try/await instead of [.then().catch()]
-            // oxlint-disable-next-line no-await-in-loop
             await fs
                 .writeFile(`${dataDir}/${basename}.thin.bin`, buffer)
                 .then(async () => {
@@ -190,7 +188,6 @@ class SensorDataSource {
                     co2: co2Data[i],
                     ...envData[i],
                 };
-                // oxlint-disable-next-line no-await-in-loop -- We want to do this sequentially
                 await this.setSensorData(data);
             }
 
@@ -214,7 +211,6 @@ class SensorDataSource {
             const basename = filename.split('.')[0];
             if (!filename.endsWith('thin.bin') && files.includes(`${basename}.thin.bin`)) continue;
 
-            // oxlint-disable-next-line no-await-in-loop -- We want to do this sequentially
             const data = await fs.readFile(`${dataDir}/${filename}`);
             for (let i = 0; i < data.length; i += 5 * 8) {
                 const timestamp = new Date(Number(data.readBigInt64LE(i)));

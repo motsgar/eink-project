@@ -24,7 +24,6 @@ const turnWrapper =
     async (...args) => {
         if (turnRunning) {
             while (true) {
-                // oxlint-disable-next-line no-await-in-loop -- Not applicable here
                 await once(nextTurnEvent, 'next');
                 if (!turnRunning) break;
             }

@@ -9,9 +9,9 @@ export const ditherImage = async (inputImageBuffer: Buffer, width?: number, heig
             const image = new Image();
             image.src = inputImageBuffer;
             // TODO: Refactor
-            // oxlint-disable-next-line prefer-destructuring no-param-reassign
+            // oxlint-disable-next-line  no-param-reassign
             width = image.width;
-            // oxlint-disable-next-line prefer-destructuring no-param-reassign
+            // oxlint-disable-next-line  no-param-reassign
             height = image.height;
         }
         const args = [

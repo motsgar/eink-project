@@ -16,6 +16,7 @@ export default defineConfig({
     options: {
         typeAware: true,
         typeCheck: true,
+        reportUnusedDisableDirectives: 'warn',
     },
     categories: {
         correctness: 'error',
@@ -49,6 +50,7 @@ export default defineConfig({
         'eslint/max-lines': 'off',
         'eslint/max-lines-per-function': 'off',
         'eslint/max-statements': 'off',
+        'eslint/no-await-in-loop': 'off',
         'eslint/no-continue': 'off',
         'eslint/no-duplicate-imports': ['warn', { allowSeparateTypeImports: true }],
         'eslint/no-inline-comments': 'off',

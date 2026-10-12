@@ -36,7 +36,6 @@ const signals: NodeJS.Signals[] = ['SIGINT', 'SIGHUP', 'SIGQUIT', 'SIGTERM'];
 
 const shutdownSignalHandler = (signal: NodeJS.Signals): void => {
     console.log(`\nReceived ${signal}, shutting down...`);
-    // oxlint-disable-next-line promise/prefer-await-to-callbacks promise/prefer-await-to-then
     shutdown().catch((error) => {
         console.error(error);
         console.error('Failed to shutdown gracefully');

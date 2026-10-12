@@ -41,13 +41,11 @@ export const resolveBinaryPath = async (command: string): Promise<string> => {
 
         const fullPath = `${directory}/${command}`;
         try {
-            // oxlint-disable-next-line no-await-in-loop
             const stats = await fs.stat(fullPath);
             if (!stats.isFile()) {
                 continue;
             }
 
-            // oxlint-disable-next-line no-await-in-loop
             await fs.access(fullPath, fs.constants.X_OK);
 
             resolvedPaths.set(command, fullPath);

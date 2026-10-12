@@ -29,11 +29,7 @@ class Draw {
     }
 
     public async init(): Promise<unknown> {
-        return Promise.all([
-            resolveBinaryPath('convert'),
-            // oxlint-disable-next-line promise/prefer-await-to-then
-            this.loadConfig().then(async () => this.loadModules()),
-        ]);
+        return Promise.all([resolveBinaryPath('convert'), this.loadConfig().then(async () => this.loadModules())]);
     }
 
     private async loadConfig(): Promise<void> {
@@ -226,7 +222,6 @@ class Draw {
         const views: Buffer[] = [];
         for (let i = 0; i < this.config.views.length; i++) {
             // TODO: Parallelize
-            // oxlint-disable-next-line no-await-in-loop
             const canvas = await this.drawViewCanvas(i);
             views.push(canvas.toBuffer('image/png'));
         }

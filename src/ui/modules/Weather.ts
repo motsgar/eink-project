@@ -41,7 +41,6 @@ export class Weather extends EInkModule {
         const ctx = canvas.getContext('2d');
 
         const forecasts = weatherDataSource.weatherData?.forecasts;
-        // oxlint-disable-next-line prefer-destructuring
         const weatherSymbols = weatherDataSource.weatherSymbols;
         if (forecasts === undefined) throw new Error("Weather data hasn't been initialized");
 

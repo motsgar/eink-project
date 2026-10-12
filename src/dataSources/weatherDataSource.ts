@@ -111,8 +111,6 @@ class WeatherDataSource {
             // oxlint-disable-next-line radix unicorn/prefer-number-properties
             const index = parseInt(filename.split('.')[0]);
 
-            // TODO: Parallelize
-            // oxlint-disable-next-line no-await-in-loop
             const symbol = await loadImage(`${symbolsDir}/${filename}`);
             this.weatherSymbols[index] = symbol;
         }

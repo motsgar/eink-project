@@ -47,7 +47,6 @@ class CO2Sensor {
         while (true) {
             this.sendPacket(BYTESReadCO2);
             try {
-                // oxlint-disable-next-line no-await-in-loop -- Not applicable here
                 const co2 = await new Promise<number>((resolve, reject) => {
                     // TODO: implement timeout
                     this.co2Events.once('co2', (reading: number, error?: Error) => {
