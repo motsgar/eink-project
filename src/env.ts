@@ -15,8 +15,8 @@ export default class Env {
     public emulatedHardware!: boolean;
     public path!: string;
     public fanPwmPin!: number;
+    public fanTachPin!: number;
     public displayVoltage!: number;
-    public FAN_TACH_PIN!: number;
 
     public async loadEnv(): Promise<Result<void, string>> {
         console.log('Loading env');
@@ -48,7 +48,7 @@ export default class Env {
 
         const fanTachPin = optToInt(process.env.FAN_TACH_PIN, 23, z.int().min(0).max(40));
         if (fanTachPin.isErr()) return err(fanTachPin.error);
-        this.FAN_TACH_PIN = fanTachPin.value;
+        this.fanTachPin = fanTachPin.value;
 
         if (!this.emulatedHardware) {
             if (process.env.DISPLAY_VOLTAGE === undefined) {

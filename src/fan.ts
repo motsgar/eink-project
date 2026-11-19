@@ -21,7 +21,7 @@ export default class Fan {
             const { Gpio } = await import('pigpio');
 
             this.pwm = new Gpio(env.fanPwmPin, { mode: Gpio.OUTPUT });
-            this.tach = new Gpio(env.FAN_TACH_PIN, {
+            this.tach = new Gpio(env.fanTachPin, {
                 mode: Gpio.INPUT,
                 pullUpDown: Gpio.PUD_UP,
                 alert: true,

@@ -109,8 +109,15 @@ const postMessage = <MessageType extends FromWorkerMessage['type']>(
 parentPort.on('message', (msg: ToWorkerMessage) => {
     (async () => {
         try {
+            console.log(msg.type);
             switch (msg.type) {
-                case 'initialize':
+                case 'initialize': {
+                    // Todo-soon: Pass env to worker instead of rereading it if reasonable
+                    const envResult = await env.loadEnv();
+                    if (envResult.isErr()) {
+                        throw new Error(`Failed to load worker environment: ${envResult.error}`);
+                    }
+
                     initialize();
                     if (screenInfo === undefined) {
                         throw new Error('Should not happen');
@@ -121,6 +128,7 @@ parentPort.on('message', (msg: ToWorkerMessage) => {
                         firmware: screenInfo.firmware,
                     });
                     break;
+                }
                 case 'enable':
                     await enable();
                     postMessage('enable', {});

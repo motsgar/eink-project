@@ -1,7 +1,12 @@
 allowBuilds:
-    '@serialport/bindings-cpp': false
+    '@serialport/bindings-cpp': true
     canvas: true
     esbuild: false
     i2c-bus: true
     it8951: true
-    pigpio: false
+    pigpio: true
+overrides:
+    it8951>node-addon-api: ^8.3.0
+permissions:
+    dotenv:
+        skills: false
