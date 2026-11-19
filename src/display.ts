@@ -7,13 +7,14 @@ import displayWorker from 'worker://displayWorker';
 
 import type { FromWorkerMessage, ScreenInfoProps, ToWorkerMessage } from './displayWorkerMessageTypes';
 
+import { convertTo4BPP } from './conversions';
 import { DisplayOperationError } from './displayWorkerMessageTypes';
 
 const worker = displayWorker.create();
 
 let cleanupRunning = false;
 let turnRunning = false;
-// TODO: Check if we should switch
+// Todo-soon: Check if we should switch
 // oxlint-disable-next-line unicorn/prefer-event-target
 const nextTurnEvent = new EventEmitter();
 
@@ -128,23 +129,6 @@ export const initialize = async (useHardware: boolean): Promise<void> => {
     console.log('Display initialized');
 };
 
-const convertTo4BPP = (image: Canvas): Buffer => {
-    const buffer = Buffer.alloc((image.width * image.height) / 2);
-    const ctx = image.getContext('2d');
-
-    const data = ctx.getImageData(0, 0, image.width, image.height).data;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-
-        const gray = Math.round(((r + g + b) / 3 / 255) * 15);
-        const index = Math.floor(i / 8);
-        buffer[index] |= i % 8 === 0 ? gray << 4 : gray;
-    }
-    return buffer;
-};
-
 export enum BPP {
     BPP1 = 1,
     BPP2 = 2,
@@ -209,7 +193,7 @@ export const stopDisplay = async (): Promise<void> => {
             console.error(err);
         });
     } else {
-        // TODO: Should we really be using Promise.all here?
+        // Todo-soon: Should we really be using Promise.all here?
         await Promise.all([
             screen.enable(),
             screen.displayArea(0, 0, screen.screenInfo.width, screen.screenInfo.height, WAVEFORM.INIT),
@@ -218,7 +202,7 @@ export const stopDisplay = async (): Promise<void> => {
             console.error('fail cleanup, try without display clear');
             console.error(err);
 
-            // Todo: Refactor
+            // Todo-soon: Refactor
             // oxlint-disable-next-line promise/no-nesting
             screen.disable().catch((err2) => {
                 console.error('fail simple cleanup, display might be left in bad state');

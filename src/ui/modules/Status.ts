@@ -45,7 +45,7 @@ export class Status extends EInkModule {
         if (sensorData === undefined) {
             throw new Error("Sensor data hasn't been initialized");
         }
-        // TODO: Better error / missing value handling
+        // Todo-soon: Better error / missing value handling
         if (sunInfo.sunrise === null || sunInfo.sunset === null) {
             throw new Error('Sunrise or sunset is null');
         }

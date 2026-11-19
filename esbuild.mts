@@ -30,7 +30,7 @@ const workerSourcePlugin = {
                 ...commonConfig,
                 entryPoints: [args.path],
                 sourcemap: false, // Running a worker through eval doesn't support sourcemaps
-                // TODO make this automatically split the bundle to multiple files where each worker
+                // Todo-soon: make this automatically split the bundle to multiple files where each worker
                 // is in its own file that can be imported regularly
                 write: false,
             });

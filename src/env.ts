@@ -1,75 +1,66 @@
 // oxlint-disable node/no-process-env
 import 'dotenv/config';
-// TODO: Resolve cycle if feasible
-// oxlint-disable-next-line import/no-cycle
-import { runningOnPi } from './utils';
+import type { Result } from 'neverthrow';
+
+import { ok, err } from 'neverthrow';
+import { z } from 'zod';
+
+import { optToBool, optToInt, toFloat } from './types';
+import { isRunningOnPi } from './utils'; // oxlint-disable-line import/no-cycle
 
 export default class Env {
     private isLoaded = false;
 
-    public EMULATED_HARDWARE!: boolean;
-    public DISPLAY_VOLTAGE!: number;
-    public PATH!: string;
-    public FAN_PWM_PIN!: number;
+    public webPort!: number;
+    public emulatedHardware!: boolean;
+    public path!: string;
+    public fanPwmPin!: number;
+    public displayVoltage!: number;
     public FAN_TACH_PIN!: number;
 
-    // TODO: Rename to loadEnv?
-    public async loadenv(): Promise<void> {
-        const runningOnHardware = await runningOnPi();
-        this.EMULATED_HARDWARE = !runningOnHardware;
-        if (process.env.EMULATED_HARDWARE !== undefined) {
-            this.EMULATED_HARDWARE = process.env.EMULATED_HARDWARE === 'true';
-        }
-        if (runningOnHardware && this.EMULATED_HARDWARE) {
-            console.log('Running on raspberry pi, but in emulated hardware mode');
-        }
-        if (!runningOnHardware && !this.EMULATED_HARDWARE) {
-            console.log(
-                'Not running on raspberry pi, but trying to run on hardware as EMULATED_HARDWARE is overridden to false',
-            );
-        }
-        if (!runningOnHardware && this.EMULATED_HARDWARE) {
-            console.log('Not running on raspberry pi so emulating hardware');
-        }
+    public async loadEnv(): Promise<Result<void, string>> {
+        const webPort = optToInt(process.env.WEB_PORT, 3000);
+        if (webPort.isErr()) return err(webPort.error);
+        this.webPort = webPort.value;
 
-        this.PATH = process.env.PATH ?? '/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin';
+        const runningOnPiRes = await isRunningOnPi();
+        if (runningOnPiRes.isErr()) return err(runningOnPiRes.error);
+        const runningOnPi = runningOnPiRes.value;
 
-        // TODO: Use zod for parsing numbers
-        // oxlint-disable-next-line unicorn/prefer-number-coercion unicorn/prefer-number-properties
-        this.FAN_PWM_PIN = parseInt(process.env.FAN_PWM_PIN ?? '18', 10);
-        if (Number.isNaN(this.FAN_PWM_PIN) || this.FAN_PWM_PIN < 0 || this.FAN_PWM_PIN > 40) {
-            throw new Error(`Invalid FAN_PWM_PIN: "${process.env.FAN_PWM_PIN}", must be a number between 0 and 40`);
-        }
+        const emulatedHardware = optToBool(process.env.EMULATED_HARDWARE, !runningOnPi);
+        if (emulatedHardware.isErr()) return err(emulatedHardware.error);
+        this.emulatedHardware = emulatedHardware.value;
 
-        // TODO: Use zod for parsing numbers
-        // oxlint-disable-next-line unicorn/prefer-number-coercion unicorn/prefer-number-properties
-        this.FAN_TACH_PIN = parseInt(process.env.FAN_TACH_PIN ?? '23', 10);
-        if (Number.isNaN(this.FAN_TACH_PIN) || this.FAN_TACH_PIN < 0 || this.FAN_TACH_PIN > 40) {
-            throw new Error(`Invalid FAN_TACH_PIN: "${process.env.FAN_TACH_PIN}", must be a number between 0 and 40`);
-        }
-
-        if (process.env.DISPLAY_VOLTAGE === undefined) {
-            if (this.EMULATED_HARDWARE) {
-                console.log('Allowing env DISPLAY_VOLTAGE to be undefined in emulated mode');
-            } else {
-                throw new Error(
-                    'DISPLAY_VOLTAGE is required when running on hardware or when EMULATED_HARDWARE is not set',
-                );
-            }
+        if (this.emulatedHardware) {
+            if (runningOnPi) console.warn('Running in emulated hardware mode even though on Raspberry Pi');
+            else console.log('Running in emulated hardware mode');
         } else {
-            // TODO: Use zod for parsing numbers
-            // oxlint-disable-next-line unicorn/prefer-number-properties unicorn/prefer-number-coercion
-            this.DISPLAY_VOLTAGE = parseFloat(process.env.DISPLAY_VOLTAGE);
+            if (runningOnPi) console.log('Running on hardware');
+            else console.warn('Running on hardware even though not on Raspberry Pi');
+        }
 
-            // Arbitrary voltage limits
-            if (Number.isNaN(this.DISPLAY_VOLTAGE) || this.DISPLAY_VOLTAGE < -5 || this.DISPLAY_VOLTAGE > 0) {
-                throw new Error(
-                    `Invalid voltage: "${process.env.DISPLAY_VOLTAGE}", DISPLAY_VOLTAGE must be a float between -5 and 0`,
-                );
+        this.path = process.env.PATH ?? '/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin';
+
+        const fanPwmPin = optToInt(process.env.FAN_PWM_PIN, 18, z.int().min(0).max(40));
+        if (fanPwmPin.isErr()) return err(fanPwmPin.error);
+        this.fanPwmPin = fanPwmPin.value;
+
+        const fanTachPin = optToInt(process.env.FAN_TACH_PIN, 23, z.int().min(0).max(40));
+        if (fanTachPin.isErr()) return err(fanTachPin.error);
+        this.FAN_TACH_PIN = fanTachPin.value;
+
+        if (!this.emulatedHardware) {
+            if (process.env.DISPLAY_VOLTAGE === undefined) {
+                return err('DISPLAY_VOLTAGE is required when running on hardware');
             }
+
+            const displayVoltage = toFloat(process.env.DISPLAY_VOLTAGE, z.number().min(-5).max(0));
+            if (displayVoltage.isErr()) return err(displayVoltage.error);
+            this.displayVoltage = displayVoltage.value;
         }
 
         this.isLoaded = true;
+        return ok();
     }
 
     public get loaded(): boolean {
@@ -83,23 +74,16 @@ export const env = new Proxy(envInstance, {
     get(target, prop) {
         if (prop === 'loadenv') {
             // Allow access to loadenv even if the environment is not loaded
-            return target.loadenv.bind(target);
+            return target.loadEnv.bind(target);
         }
 
         if (!target.loaded) {
             throw new Error(`Tried to read environment variable "${String(prop)}" before loading the environment`);
         }
 
-        // Check if we are in dev/emulated hardware mode and accessing an allowed undefined variable
-        const allowedEmulationUndefinedProps = ['DISPLAY_VOLTAGE'];
-
-        // Typescript doesn't know we have broken types intentionally in the Env class
-        if (
-            target.EMULATED_HARDWARE &&
-            allowedEmulationUndefinedProps.includes(String(prop)) &&
-            // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-            target[prop as keyof Env] === undefined
-        ) {
+        // Prevent accessing hardware only props in emulated mode because they might be undefined
+        const hardwareOnlyProps = ['DISPLAY_VOLTAGE'];
+        if (target.emulatedHardware && hardwareOnlyProps.includes(String(prop))) {
             throw new Error(`Tried to read environment variable "${String(prop)}" while in emulated mode`);
         }
 
@@ -107,16 +91,3 @@ export const env = new Proxy(envInstance, {
         return Reflect.get(target, prop);
     },
 });
-
-// Not sure why commented out
-// export const DEV = process.env.DEV ? process.env.DEV === 'true' : false;
-// export const WEBIMAGES = process.env.WEBIMAGES ? process.env.WEBIMAGES === 'true' : false;
-// export const DISPLAY_VOLTAGE = parseFloat(process.env.DISPLAY_VOLTAGE!);
-// export const PATH = process.env.PATH ?? '/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin';
-
-// Arbitrary voltage limits
-// if (isNaN(DISPLAY_VOLTAGE) || DISPLAY_VOLTAGE < -5 || DISPLAY_VOLTAGE > 0) {
-//     throw new Error(`Invalid voltage: "${process.env.DISPLAY_VOLTAGE}", must be a float between -5 and 0`);
-// }
-// if (DEV) console.log('Running in dev mode');
-//

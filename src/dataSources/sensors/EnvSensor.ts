@@ -15,7 +15,7 @@ class EnvSensor {
     private sensor?: Sensor;
 
     public async start(): Promise<void> {
-        if (env.EMULATED_HARDWARE) return;
+        if (env.emulatedHardware) return;
         await bme280
             .open({
                 i2cAddress: 0x76,
@@ -30,7 +30,7 @@ class EnvSensor {
     }
 
     public async stop(): Promise<void> {
-        if (env.EMULATED_HARDWARE) return;
+        if (env.emulatedHardware) return;
         await this.sensor?.close();
         this.sensor = undefined;
     }

@@ -31,6 +31,7 @@
         "it8951": "^0.1.1",
         "moment": "^2.31.0",
         "moment-timezone": "^0.6.4",
+        "neverthrow": "^8.2.0",
         "pigpio": "^3.3.1",
         "serialport": "^13.0.0",
         "suncalc": "^2.0.2",

@@ -1,5 +1,5 @@
 declare module 'worker://*' {
-    // TODO: Check if we could not do this
+    // Todo-soon: Check if we could not do this
     // oxlint-disable-next-line typescript/consistent-type-imports
     type Worker = import('worker_threads').Worker;
 

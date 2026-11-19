@@ -20,7 +20,7 @@ export default class WebServer {
         this.http.use(bodyParser.urlencoded({ extended: true }));
         this.http.use(bodyParser.json());
 
-        // TODO: Read images from draw code
+        // Todo-soon: Read images from draw code
         // if (WEBIMAGES) {
         //     draw.readyPromise
         //         .then(async () => {
@@ -62,7 +62,7 @@ export default class WebServer {
         });
 
         apiRouter.get('/images/:id', (req, res) => {
-            // TODO: Use zod to parse the integer
+            // Todo-soon: Use zod to parse the integer
             // oxlint-disable-next-line unicorn/prefer-number-properties radix
             const id = parseInt(req.params.id);
             if (id < 0 || id >= this.images.length) {
@@ -84,7 +84,7 @@ export default class WebServer {
 
             res.json({ message: 'Data updated successfully' });
 
-            // TODO make sure module loaded
+            // Todo-soon make sure module loaded
             await draw.updateConfig(updatedData);
             this.images = await draw.getAllViewsAsImages();
         });

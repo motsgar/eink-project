@@ -18,7 +18,7 @@ let screenInfo: SystemInfo | undefined;
 let enabled = false;
 
 const initialize = (): void => {
-    const vcom = -env.DISPLAY_VOLTAGE * 1000;
+    const vcom = -env.displayVoltage * 1000;
 
     screen = new IT8951(vcom);
     console.log('worker screen initialize start');
@@ -70,7 +70,7 @@ const displayArea = (x: number, y: number, width: number, height: number, mode: 
     screen.displayArea(x, y, width, height, mode);
     const now = Date.now();
     while (now + 1000 > Date.now()) {
-        // TODO:
+        // Todo-soon: ???
     }
     console.error(Date.now(), 'worker display area end');
 };

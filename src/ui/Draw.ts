@@ -106,7 +106,7 @@ class Draw {
             throw new Error('Draw.changeView() was called before the config was loaded');
         }
 
-        // TODO: Draw loading symbol
+        // Todo-soon: Draw loading symbol
         this.viewIndex += indexDiff;
         while (this.viewIndex < 0) this.viewIndex += this.config.views.length;
         this.viewIndex %= this.config.views.length;
@@ -221,7 +221,6 @@ class Draw {
 
         const views: Buffer[] = [];
         for (let i = 0; i < this.config.views.length; i++) {
-            // TODO: Parallelize
             const canvas = await this.drawViewCanvas(i);
             views.push(canvas.toBuffer('image/png'));
         }
@@ -233,7 +232,7 @@ class Draw {
         console.log(`Drawing current view (index: ${this.viewIndex})`);
         const canvas = await this.drawViewCanvas(this.viewIndex);
 
-        if (env.EMULATED_HARDWARE) {
+        if (env.emulatedHardware) {
             // Save the canvas as a PNG file
             const filename = `view-${this.viewIndex}.png`;
             const out = createWriteStream(filename);
@@ -243,7 +242,7 @@ class Draw {
                 console.log(`Saved current view to ${filename}`);
             });
         } else {
-            // TODO: draw on screen
+            // Todo-soon: draw on screen
             console.log('Missing code to draw view to screen :P');
         }
     }

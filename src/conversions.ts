@@ -1,8 +1,6 @@
-// oxlint-disable no-unused-vars
 import type { Canvas } from 'canvas';
 
-// TODO: Use these functions instead of redefining them elsewhere
-const convertTo4BPP = (image: Canvas): Buffer => {
+export const convertTo4BPP = (image: Canvas): Buffer => {
     const buffer = Buffer.alloc((image.width * image.height) >> 1);
     const ctx = image.getContext('2d');
 
@@ -20,7 +18,7 @@ const convertTo4BPP = (image: Canvas): Buffer => {
     return buffer;
 };
 
-const convertTo2BPP = (image: Canvas): Buffer => {
+export const convertTo2BPP = (image: Canvas): Buffer => {
     const buffer = Buffer.alloc((image.width * image.height) >> 2);
     const ctx = image.getContext('2d');
 
@@ -38,7 +36,7 @@ const convertTo2BPP = (image: Canvas): Buffer => {
     return buffer;
 };
 
-const convertTo1BPP = (image: Canvas): Buffer => {
+export const convertTo1BPP = (image: Canvas): Buffer => {
     const buffer = Buffer.alloc((image.width * image.height) >> 3);
     const ctx = image.getContext('2d');
 

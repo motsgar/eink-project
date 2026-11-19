@@ -29,19 +29,8 @@ export default defineConfig({
     // oxlint-enable eslint/sort-keys
     rules: {
         '@typescript-eslint/explicit-function-return-type': ['warn', { allowExpressions: true }],
-        '@typescript-eslint/switch-exhaustiveness-check': [
-            'error',
-            {
-                considerDefaultExhaustiveForUnions: true,
-            },
-        ],
-        'capitalized-comments': [
-            'error',
-            'always',
-            {
-                ignoreConsecutiveComments: true,
-            },
-        ],
+        '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],
+        'capitalized-comments': ['error', 'always', { ignoreConsecutiveComments: true }],
         'eslint/complexity': 'off',
         'eslint/curly': ['warn', 'multi-line', 'consistent'],
         'eslint/default-case': 'off',
@@ -54,18 +43,14 @@ export default defineConfig({
         'eslint/no-continue': 'off',
         'eslint/no-duplicate-imports': ['warn', { allowSeparateTypeImports: true }],
         'eslint/no-inline-comments': 'off',
+        'eslint/no-lonely-if': 'off',
         'eslint/no-magic-numbers': 'off',
         'eslint/no-plusplus': 'off',
         'eslint/no-ternary': 'off',
         'eslint/no-undefined': 'off',
-        'eslint/no-unused-vars': [
-            'error',
-            {
-                argsIgnorePattern: '^_',
-            },
-        ],
+        'eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
         'eslint/no-void': 'off',
-        'eslint/no-warning-comments': 'off',
+        'eslint/no-warning-comments': ['warn', { location: 'start', terms: ['todo:'] }],
         'eslint/one-var': 'off',
         'eslint/prefer-destructuring': 'off',
         'eslint/prefer-template': 'off',
@@ -116,20 +101,10 @@ export default defineConfig({
         {
             files: ['src/**/*.ts'],
             rules: {
+                'eslint/new-cap': ['error', { capIsNewExceptions: ['Router'] }],
                 'eslint/no-console': 'off',
                 'import/no-nodejs-modules': 'off',
-                'import/no-unassigned-import': [
-                    'error',
-                    {
-                        allow: ['chartjs-adapter-moment', 'dotenv/config'],
-                    },
-                ],
-                'new-cap': [
-                    'error',
-                    {
-                        capIsNewExceptions: ['Router'],
-                    },
-                ],
+                'import/no-unassigned-import': ['error', { allow: ['chartjs-adapter-moment', 'dotenv/config'] }],
                 'no-bitwise': 'off',
                 'promise/prefer-await-to-callbacks': 'off',
                 'promise/prefer-await-to-then': 'off',
@@ -142,12 +117,7 @@ export default defineConfig({
             files: ['web/src/**/*.{ts,mts,tsx}'],
             rules: {
                 'eslint/no-alert': 'off',
-                'import/no-unassigned-import': [
-                    'error',
-                    {
-                        allow: ['**/*.svg', '**/*.css'],
-                    },
-                ],
+                'import/no-unassigned-import': ['error', { allow: ['**/*.svg', '**/*.css'] }],
                 'react/forbid-component-props': 'off',
                 'react/jsx-filename-extension': ['warn', { extensions: ['jsx', 'tsx'] }],
                 'react/jsx-handler-names': 'off',

@@ -84,7 +84,7 @@ export const parseForecastXml = async (xml: string): Promise<Forecast[]> =>
                             forecastMap[dateKey].localtime = date;
                         }
                         if (key === 'dark') forecastMap[dateKey][key] = Boolean(stringVal);
-                        // TODO: Use zod for number parsing
+                        // Todo-soon: Use Number or Zod
                         // oxlint-disable-next-line unicorn/prefer-number-properties unicorn/prefer-number-coercion
                         else forecastMap[dateKey][key] = parseFloat(stringVal);
                     }
@@ -169,7 +169,7 @@ export const parseObservationXml = async (xml: string): Promise<Observation> =>
                         if (date.getTime() < observation.localtime.getTime()) continue;
                         const stringVal = point['wml2:MeasurementTVP'][0]['wml2:value'][0];
                         observation.localtime = date;
-                        // TODO: Parse float with zod
+                        // Todo-soon: Use Number or Zod
                         // oxlint-disable-next-line unicorn/prefer-number-properties unicorn/prefer-number-coercion
                         observation[key] = parseFloat(stringVal);
                     }

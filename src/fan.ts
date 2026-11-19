@@ -14,13 +14,13 @@ export default class Fan {
     private rpm = 0;
 
     public async init(): Promise<void> {
-        if (env.EMULATED_HARDWARE) {
+        if (env.emulatedHardware) {
             console.log('Using emulated fan');
         } else {
             // Dynamically load gpio as it is not available in emulated mode.
             const { Gpio } = await import('pigpio');
 
-            this.pwm = new Gpio(env.FAN_PWM_PIN, { mode: Gpio.OUTPUT });
+            this.pwm = new Gpio(env.fanPwmPin, { mode: Gpio.OUTPUT });
             this.tach = new Gpio(env.FAN_TACH_PIN, {
                 mode: Gpio.INPUT,
                 pullUpDown: Gpio.PUD_UP,

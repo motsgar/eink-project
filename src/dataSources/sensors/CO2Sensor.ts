@@ -15,13 +15,13 @@ class CO2Sensor {
     public constructor() {
         this.co2 = 600;
         this.co2SerialBuffer = [];
-        // TODO: Check if we should change this
+        // Todo-soon: Check if we should change this
         // oxlint-disable-next-line unicorn/prefer-event-target
         this.co2Events = new EventEmitter({ captureRejections: true });
     }
 
     public start(): void {
-        if (env.EMULATED_HARDWARE) return;
+        if (env.emulatedHardware) return;
         this.serialPort = new SerialPort({ path: '/dev/serial0', baudRate: 9600 });
         this.sendPacket(BYTESABCOff);
 
@@ -35,7 +35,7 @@ class CO2Sensor {
     }
 
     public stop(): void {
-        if (env.EMULATED_HARDWARE) return;
+        if (env.emulatedHardware) return;
         this.serialPort?.close();
         this.serialPort = undefined;
     }
@@ -43,12 +43,12 @@ class CO2Sensor {
     public async getData(): Promise<number> {
         let errorCount = 0;
 
-        // TODO: Convert to a for loop instead
+        // Todo-soon: Convert to a for loop instead
         while (true) {
             this.sendPacket(BYTESReadCO2);
             try {
                 const co2 = await new Promise<number>((resolve, reject) => {
-                    // TODO: implement timeout
+                    // Todo-soon: implement timeout
                     this.co2Events.once('co2', (reading: number, error?: Error) => {
                         if (error) reject(error);
                         else resolve(reading);

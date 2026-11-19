@@ -2,13 +2,13 @@ import { getResolvedPath } from '@/utils';
 import { Image } from 'canvas';
 import { spawn } from 'node:child_process';
 
-// TODO make more robust with e.g. more process lifecycle handling and timeouts
+// Todo-soon: make more robust with e.g. more process lifecycle handling and timeouts
 export const ditherImage = async (inputImageBuffer: Buffer, width?: number, height?: number): Promise<Image> =>
     new Promise((resolve, reject) => {
         if (width === undefined) {
             const image = new Image();
             image.src = inputImageBuffer;
-            // TODO: Refactor
+            // Todo-soon: Refactor
             // oxlint-disable-next-line  no-param-reassign
             width = image.width;
             // oxlint-disable-next-line  no-param-reassign

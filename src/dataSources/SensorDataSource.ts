@@ -40,7 +40,6 @@ class SensorDataSource {
 
             console.log(`Converting ${dataDir}/${filename} to ${dataDir}/${basename}.thin.bin`);
 
-            // TODO: Parallelize
             const fileData = await fs.readFile(`${dataDir}/${filename}`);
             let data = [];
             for (let i = 0; i < fileData.length; i += 5 * 8) {
@@ -63,7 +62,7 @@ class SensorDataSource {
                 buffer.writeFloatLE(datum.pressure, offset + 32);
             }
 
-            // TODO: Use try/await instead of [.then().catch()]
+            // Todo-soon: Use try/await instead of [.then().catch()]
             await fs
                 .writeFile(`${dataDir}/${basename}.thin.bin`, buffer)
                 .then(async () => {
@@ -77,7 +76,7 @@ class SensorDataSource {
     }
 
     public async init(): Promise<void> {
-        return env.EMULATED_HARDWARE
+        return env.emulatedHardware
             ? this.writeFakeData().then(async () => {
                   await this.readDataFromFile();
               })
@@ -226,7 +225,7 @@ class SensorDataSource {
     }
 
     public getSensorData(timePeriod: number, getSeconds = false): SensorDataType[] {
-        if (timePeriod > 7 * 24 * 60 * 60) throw new Error('Tried to get sensor data for more than 7 days'); // TODO:
+        if (timePeriod > 7 * 24 * 60 * 60) throw new Error('Tried to get sensor data for more than 7 days'); // Todo-soon: ???
 
         const date = new Date();
         return this.sensorHistory.filter((sensorData) => {
@@ -236,7 +235,7 @@ class SensorDataSource {
     }
 
     private async readSensorData(timestamp: Date): Promise<void> {
-        const promise = env.EMULATED_HARDWARE
+        const promise = env.emulatedHardware
             ? Promise.all([fakeCo2Sensor.getData(), fakeEnvSensor.getData()])
             : Promise.all([co2Sensor.getData(), envSensor.getData()]);
         await promise

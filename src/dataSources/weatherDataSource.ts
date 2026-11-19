@@ -79,7 +79,7 @@ class WeatherDataSource {
 
         const sunInfo = SunCalc.getTimes(new Date(), 60.20307, 24.96131);
 
-        // TODO: Fix fetch warnings
+        // Todo-soon: Fix fetch warnings
         this.weatherData = {
             forecasts,
             observation,
@@ -107,7 +107,7 @@ class WeatherDataSource {
         for (const filename of await fs.readdir(symbolsDir)) {
             if (!filename.endsWith('.svg')) continue;
 
-            // TODO: Use zod for int parsing
+            // Todo-soon: Use Number or zod
             // oxlint-disable-next-line radix unicorn/prefer-number-properties
             const index = parseInt(filename.split('.')[0]);
 
