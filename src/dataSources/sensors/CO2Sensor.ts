@@ -4,7 +4,8 @@ import { SerialPort } from 'serialport';
 import { env } from '../../env';
 
 const BYTESReadCO2 = [0xff, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79];
-const BYTESABCOff = [0xff, 0x01, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x86];
+const _BYTESABCOff = [0xff, 0x01, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x86];
+const BYTESABCOn = [0xff, 0x01, 0x79, 0xa0, 0x00, 0x00, 0x00, 0x00, 0xe6];
 
 class CO2Sensor {
     private readonly co2: number;
@@ -23,7 +24,7 @@ class CO2Sensor {
     public start(): void {
         if (env.emulatedHardware) return;
         this.serialPort = new SerialPort({ path: '/dev/serial0', baudRate: 9600 });
-        this.sendPacket(BYTESABCOff);
+        this.sendPacket(BYTESABCOn);
 
         this.serialPort.on('close', () => {
             throw new Error('MH-Z19B port closed suddenly');

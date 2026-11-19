@@ -3,5 +3,5 @@ allowBuilds:
     canvas: true
     esbuild: false
     i2c-bus: true
-    it8951: false
+    it8951: true
     pigpio: false

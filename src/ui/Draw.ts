@@ -1,5 +1,6 @@
 import type { Canvas } from 'canvas';
 
+import { drawCanvas } from '@/display';
 import { Image, createCanvas } from 'canvas';
 import { createWriteStream } from 'node:fs';
 import * as fs from 'node:fs/promises';
@@ -9,7 +10,7 @@ import type { EInkModule } from './modules/EInkModule';
 
 import { ConfigSchema } from '../../web/src/schema';
 import { env } from '../env';
-import { resolveBinaryPath } from '../utils';
+import { errorToString, resolveBinaryPath } from '../utils';
 import { ditherImage } from './ditherImage';
 import { CO2Graph } from './modules/CO2';
 import { EnvGraph } from './modules/EnvGraph';
@@ -242,8 +243,9 @@ class Draw {
                 console.log(`Saved current view to ${filename}`);
             });
         } else {
-            // Todo-soon: draw on screen
-            console.log('Missing code to draw view to screen :P');
+            await drawCanvas(0, 0, canvas).catch((error) => {
+                console.error(`Failed to draw canvas on screen:\n${errorToString(error)}`);
+            });
         }
     }
 }

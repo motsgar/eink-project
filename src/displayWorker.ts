@@ -68,10 +68,10 @@ const displayArea = (x: number, y: number, width: number, height: number, mode: 
     }
     console.error(Date.now(), 'worker display area start');
     screen.displayArea(x, y, width, height, mode);
-    const now = Date.now();
-    while (now + 1000 > Date.now()) {
-        // Todo-soon: ???
-    }
+    // ???
+    // const now = Date.now();
+    // while (now + 1000 > Date.now()) {
+    // }
     console.error(Date.now(), 'worker display area end');
 };
 

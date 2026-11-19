@@ -19,6 +19,7 @@ export default class Env {
     public FAN_TACH_PIN!: number;
 
     public async loadEnv(): Promise<Result<void, string>> {
+        console.log('Loading env');
         const webPort = optToInt(process.env.WEB_PORT, 3000);
         if (webPort.isErr()) return err(webPort.error);
         this.webPort = webPort.value;
@@ -72,10 +73,8 @@ const envInstance = new Env();
 
 export const env = new Proxy(envInstance, {
     get(target, prop) {
-        if (prop === 'loadenv') {
-            // Allow access to loadenv even if the environment is not loaded
-            return target.loadEnv.bind(target);
-        }
+        // Allow access to loadenv even if the environment is not loaded
+        if (prop === 'loadEnv') return target.loadEnv.bind(target);
 
         if (!target.loaded) {
             throw new Error(`Tried to read environment variable "${String(prop)}" before loading the environment`);

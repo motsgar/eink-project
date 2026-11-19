@@ -1,8 +1,9 @@
 // oxlint-disable unicorn/no-process-exit
-import { initDataSources, stopDataSources } from './dataSources/dataUtil';
+import { initDataSources, startDataSources, stopDataSources } from './dataSources/dataUtil';
 import { stopDisplay, initialize as initDisplay } from './display';
 import { env } from './env';
 import { fan } from './fan';
+import { draw } from './ui/Draw';
 import { errorToString } from './utils';
 import { webServer } from './webServer';
 
@@ -37,6 +38,12 @@ const shutdown = async (): Promise<void> => {
     process.exit(0);
 };
 
+const shutdownAndCatch = async (): Promise<void> =>
+    shutdown().catch((error) => {
+        console.error(`Failed to shutdown gracefully:\n${errorToString(error)}`);
+        process.exit(1);
+    });
+
 process.on('beforeExit', (code) => {
     console.log('Node event loop is empty causing process to exit with code:', code);
 });
@@ -59,20 +66,14 @@ process.on('uncaughtException', (error) => {
     console.error(
         'Uncaught exception happened, trying to close everything and exit\nPower might be left on on hardware modules',
     );
-    shutdown().catch((newError) => {
-        console.error(`Failed to shutdown gracefully:\n${errorToString(newError)}`);
-        process.exit(1);
-    });
+    void shutdownAndCatch();
 });
 
 const signals: NodeJS.Signals[] = ['SIGINT', 'SIGHUP', 'SIGQUIT', 'SIGTERM'];
 
 const shutdownSignalHandler = (signal: NodeJS.Signals): void => {
     console.log(`\nReceived ${signal}, shutting down...`);
-    shutdown().catch((error) => {
-        console.error(`Failed to shutdown gracefully:\n${errorToString(error)}`);
-        process.exit(1);
-    });
+    void shutdownAndCatch();
 };
 
 const setSignalHandlers = (): void => {
@@ -97,7 +98,7 @@ const initialize = async (): Promise<void> => {
 
     // Init display separately first as it has a risk of crashing the whole process if the user
     // can't access the display spi device / IO ports
-    await initDisplay(env.emulatedHardware);
+    await initDisplay(!env.emulatedHardware);
 
     const webPromise = webServer.listen(env.webPort).then(() => {
         console.log(`HTTP server running on ${env.webPort}`);
@@ -108,27 +109,44 @@ const initialize = async (): Promise<void> => {
 
     await Promise.all([
         initDataSources(),
+        startDataSources(),
         fan.init().then(() => {
             // This stupid pigpio library that is used for fan control overrides all signals to terminate the
             // program but as a hack resetting signal handlers overrides them back to actually handle graceful shutdown
             setSignalHandlers();
         }),
         webPromise,
+        draw.init(),
     ]);
 };
 
 const main = async (): Promise<void> => {
     setSignalHandlers();
 
-    await initialize();
-    console.log('Initialized');
+    try {
+        await initialize();
+        console.log('Initialized');
+    } catch (error) {
+        console.error(`Failed to initialize:${errorToString(error)}`);
+        void shutdownAndCatch();
+        return;
+    }
 
     setInterval(() => {
-        console.log(`fan speed: ${fan.getRpm()} rpm`);
+        console.debug(`fan speed: ${fan.getRpm()} rpm`);
     }, 1000);
+
+    // Todo-soon: Sleep until time is close to even minute instead of exactly one minute
+    while (true) {
+        await draw.drawCurrentView();
+
+        await new Promise((resolve) => {
+            setTimeout(resolve, 60_000);
+        });
+    }
 };
 
 main().catch((error) => {
-    console.error(`Failed to initialize:${errorToString(error)}`);
-    process.exit(1);
+    console.error(`Main loop raised:\n${errorToString(error)}`);
+    void shutdownAndCatch();
 });
